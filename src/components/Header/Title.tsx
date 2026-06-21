@@ -4,10 +4,10 @@ import { memo } from "react";
 import { TypeAnimation } from "react-type-animation";
 
 const terminalLines = [
-  "It depends",
   "Whololo",
   "Friction → Insight",
   "0 → 1",
+  "It depends",
   "No silver bullet",
   "Do one thing well",
   "Talk is cheap",
