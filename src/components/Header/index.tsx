@@ -9,7 +9,7 @@ export const Header = () => {
   const setPage = useSetAtom(currentPageAtom);
 
   return (
-    <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 border-b border-(--border)/50 shrink-0">
+    <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 py-4 border-b border-(--border)/50 shrink-0">
       <Avatar />
 
       <div className="min-w-0 overflow-hidden flex items-center justify-center">

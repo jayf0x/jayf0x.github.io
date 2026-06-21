@@ -53,6 +53,7 @@ export function useProjectSearch() {
     setSort(null);
     setFilters((prev) => {
       const next = new Set(prev);
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       next.has(value) ? next.delete(value) : next.add(value);
       return next;
     });

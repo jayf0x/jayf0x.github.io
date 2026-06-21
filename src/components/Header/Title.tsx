@@ -4,14 +4,20 @@ import { memo } from "react";
 import { TypeAnimation } from "react-type-animation";
 
 const terminalLines = [
-  "Frontend engineer++",
-  "Friction > Problem > Solution",
-  "Bridging users and tech",
-  "Quality > Speed",
-  "Challenge me: www.chess.com/member/chaos_70b",
-  "('b' + 'a' + + 'a' + 'a').toLowerCase()",
-  "Status 418 ☕",
-  "2B||!2B",
+  "It depends",
+  "Whololo",
+  "Friction → Insight",
+  "0 → 1",
+  "No silver bullet",
+  "Do one thing well",
+  "Talk is cheap",
+  "Simplicity first",
+  "There is no spoon",
+  "Do or do not",
+  "Why so serious",
+  "Fortune favors the bold",
+  "↑ signal, ↓ noise",
+  "418",
 ].flatMap((l) => [l, 3500]);
 
 export const Title = () => {

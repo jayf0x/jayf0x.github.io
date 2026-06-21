@@ -178,11 +178,14 @@ export const ChatWidget = () => {
       initMessages();
       setHasInitialized(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const countdownProgress =
+    // eslint-disable-next-line react-hooks/refs
     countdown !== null && initialEtaRef.current
-      ? 1 - countdown / initialEtaRef.current
+      ? // eslint-disable-next-line react-hooks/refs
+        1 - countdown / initialEtaRef.current
       : null;
 
   return (

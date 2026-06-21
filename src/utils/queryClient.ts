@@ -1,6 +1,6 @@
 import { devLog } from "@/utils/logger";
-import axios from "axios";
 import { QueryClient } from "@tanstack/react-query";
+import axios from "axios";
 
 const CACHE_KEY = "__portfolio_qc__";
 export const TTL = 5 * 60 * 60 * 1000; // 5 hours
@@ -50,7 +50,9 @@ const cacheOriginTs = (() => {
       const { ts } = JSON.parse(raw) as StoredCache;
       if (Date.now() - ts < TTL) return ts;
     }
-  } catch {}
+  } catch (e) {
+    devLog(e);
+  }
   return Date.now();
 })();
 
