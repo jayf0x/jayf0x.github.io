@@ -62,6 +62,18 @@ export async function fetchPreviewUrl(
   }
 }
 
+// Flagship picks = the repos Jonatan links in his profile README, in order.
+export async function fetchFlagshipSlugs(owner: string): Promise<string[]> {
+  const url = `https://raw.githubusercontent.com/${owner}/${owner}/main/README.md`;
+  const { data } = await axios.get<string>(url, {
+    responseType: "text",
+    transformResponse: (d) => d,
+  });
+  const re = new RegExp(`github\\.com/${owner}/([a-zA-Z0-9._-]+)`, "g");
+  const slugs = [...data.matchAll(re)].map((m) => m[1]);
+  return [...new Set(slugs)]; // dedupe, keep README order
+}
+
 export async function fetchNpmPackages(
   owner: string,
 ): Promise<Record<string, string>> {

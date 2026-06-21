@@ -3,7 +3,6 @@ import { PackageSearch, Search, X } from "lucide-react";
 import { ActiveChips } from "./ActiveChips";
 import { FilterRow } from "./FilterRow";
 import { useProjectSearch } from "./hooks/useProjectSearch";
-import { PresetCards } from "./PresetCards";
 import { RepoCard } from "./RepoCard";
 import { Sidebar } from "./Sidebar";
 
@@ -30,17 +29,20 @@ export const ProjectSection = () => {
   } = useProjectSearch();
 
   return (
-    <section className="flex flex-col flex-1 min-h-0 px-5 py-4">
-      <div className="mx-auto max-w-5xl flex flex-row min-h-0 gap-0 size-full">
+    <section className="flex flex-col min-h-[82vh] px-5 py-4 border-t border-(--border)/30">
+      <h2 className="mx-auto max-w-5xl w-full mb-3 font-mono text-nano uppercase tracking-widest text-(--muted)">
+        Browse all projects
+      </h2>
+      <div className="mx-auto max-w-5xl flex flex-row gap-0 w-full items-start">
         <Sidebar onSelect={setQuery} onSort={applySort} />
 
-        <div className="flex-1 min-w-0 flex flex-col min-h-0 gap-3 md:pl-4">
-          {/* Search bar */}
+        <div className="flex-1 min-w-0 flex flex-col gap-3 md:pl-4">
+          {/* Search bar — sticks to top while browsing so it's always reachable */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springGentle}
-            className="relative"
+            className="relative sticky top-0 z-20 py-2 bg-(--surface)/75 backdrop-blur-md"
           >
             <Search
               size={14}
@@ -137,24 +139,11 @@ export const ProjectSection = () => {
           </AnimatePresence>
 
           {/* Results */}
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-0.5 pt-0.5">
+          <div className="space-y-2 pr-0.5 pt-0.5">
             {isLoading ? (
               <LoadingSkeleton />
             ) : (
               <AnimatePresence mode="popLayout" initial={false}>
-                {!hasInput && !sort && (
-                  <motion.div
-                    key="presets"
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={springGentle}
-                  >
-                    <PresetCards onSelect={applySort} />
-                  </motion.div>
-                )}
-
                 {hasInput && displayResults.length === 0 && (
                   <motion.div
                     key="empty-no-results"

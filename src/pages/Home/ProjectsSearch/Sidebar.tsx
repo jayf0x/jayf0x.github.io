@@ -146,10 +146,10 @@ export const Sidebar = ({ onSelect, onSort }: SidebarProps) => {
   );
 
   return (
-    <div className="relative hidden md:flex shrink-0 self-stretch">
+    <div className="relative hidden md:flex shrink-0 self-start sticky top-0 h-[78vh]">
       {isLarge ? (
         <div
-          className="flex flex-col min-h-0 overflow-hidden"
+          className="flex flex-col min-h-0 overflow-hidden h-full"
           style={{ width: 210 }}
         >
           {sidebarPanel}
@@ -163,7 +163,7 @@ export const Sidebar = ({ onSelect, onSort }: SidebarProps) => {
               animate={{ width: 210, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={spring}
-              className="flex flex-col min-h-0 overflow-hidden"
+              className="flex flex-col min-h-0 overflow-hidden h-full"
               style={{ minWidth: 0 }}
             >
               {sidebarPanel}

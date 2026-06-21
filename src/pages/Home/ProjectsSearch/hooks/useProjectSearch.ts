@@ -36,13 +36,14 @@ export function useProjectSearch() {
   const displayResults =
     sort === "npm"
       ? repos.filter((r) => findNpmUrl(npmPackages, r.name))
-      : sort && !hasInput
-        ? repos.slice().sort((a, b) => {
+      : hasInput
+        ? results
+        : repos.slice().sort((a, b) => {
+            // no input → browse all, default to recent activity
             if (sort === "name") return a.name.localeCompare(b.name);
-            const key = sort as "created_at" | "pushed_at";
+            const key = (sort ?? "pushed_at") as "created_at" | "pushed_at";
             return new Date(b[key]).getTime() - new Date(a[key]).getTime();
-          })
-        : results;
+          });
 
   const setQuery = (value: string) => {
     setSort(null);
