@@ -1,5 +1,5 @@
 User-agent: *
 Disallow: /
-
-User-agent: *
 Allow: /site-export.txt
+
+Sitemap: https://jayf0x.github.io/sitemap.xml
