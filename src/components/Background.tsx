@@ -1,7 +1,7 @@
 import { useCheckpointValue } from "@/hooks/useCheckpoint";
 import { useIsMobile } from "@/hooks/useDevice";
 import { FluidText } from "@jayf0x/fluidity-js";
-import { useMotionValue, useMotionValueEvent } from "framer-motion";
+// import { useMotionValue, useMotionValueEvent } from "framer-motion";
 import { useCallback, useEffect, useRef } from "react";
 
 export const Background = () => {
@@ -10,6 +10,8 @@ export const Background = () => {
   const isMobile = useIsMobile();
   const isVoid = useCheckpointValue("Void");
   const showChickenEgg = useCheckpointValue("🐔🥚");
+
+  // useSplat(fluidRef);
 
   const splatCanvas = useCallback(
     (x: number, y: number) => {
@@ -22,14 +24,16 @@ export const Background = () => {
     [isMobile],
   );
 
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
+  // const mx = useMotionValue(0);
+  // const my = useMotionValue(0);
 
   useEffect(() => {
     const onPointerMove = (event: MouseEvent) => {
       if (event.isTrusted) {
-        mx.set(-event.clientX / window.innerWidth);
-        my.set(-event.clientY / window.innerHeight);
+        // const x = -Math.round(event.clientX / window.innerWidth);
+        // const y = -Math.round(event.clientY / window.innerHeight);
+        // mx.set(x);
+        // my.set(y);
 
         splatCanvas(event.clientX, event.clientY);
       }
@@ -42,15 +46,15 @@ export const Background = () => {
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
     };
-  }, [mx, my, splatCanvas]);
+  }, [splatCanvas]);
 
-  useMotionValueEvent(mx, "change", (v) => {
-    document.documentElement.style.setProperty("--mx", v.toFixed(2));
-  });
+  // useMotionValueEvent(mx, "change", (v) => {
+  //   document.documentElement.style.setProperty("--mx", v.toFixed(2));
+  // });
 
-  useMotionValueEvent(my, "change", (v) => {
-    document.documentElement.style.setProperty("--my", v.toFixed(2));
-  });
+  // useMotionValueEvent(my, "change", (v) => {
+  //   document.documentElement.style.setProperty("--my", v.toFixed(2));
+  // });
 
   const fontSize = showChickenEgg
     ? 120
@@ -98,4 +102,44 @@ export const Background = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.055)_1px,transparent_2px)] bg-size-[28px_28px]" />
     </div>
   );
+};
+
+const defaul = { x: 0.1, y: 0, z: 0, vx: 0, vy: 0 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const useSplat = (ref: any) => {
+  const engine = {
+    step: (p: typeof defaul) => {
+      const theta = p.z + 0.05;
+      const r = 180 + Math.sin(theta * 2) * 40;
+      const tx = Math.cos(theta) * r;
+      const ty = Math.sin(theta) * r;
+      return { x: tx, y: ty, z: theta, vx: tx - p.x, vy: ty - p.y };
+    },
+    project: (p: typeof defaul, w: number, h: number) => ({
+      sx: w / 2 + p.x,
+      sy: h / 2 + p.y,
+      svx: p.vx * 0.8,
+      svy: p.vy * 0.8,
+    }),
+  };
+
+  const stateRef = useRef(defaul);
+
+  useEffect(() => {
+    let animationId = 0;
+    const animate = () => {
+      const { innerWidth: w, innerHeight: h } = window;
+      stateRef.current = engine.step(stateRef.current);
+      const { sx, sy, svx, svy } = engine.project(stateRef.current, w, h);
+
+      ref.current?.splat(sx, sy, svx, svy, 1);
+
+      animationId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [ref]);
 };
