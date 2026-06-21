@@ -5,7 +5,6 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
   plugins: [react(), MillionLint.vite({ enabled: mode !== "production" })],
-  base: mode === "production" ? "/site" : "/",
   build: {
     outDir: "dist",
     emptyOutDir: true,

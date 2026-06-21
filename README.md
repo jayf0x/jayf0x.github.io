@@ -2,7 +2,7 @@
 
 Personal site — project browser and portfolio. Built with React + Vite, deployed to GitHub Pages.
 
-Live: https://jayf0x.github.io/site/
+Live: https://jayf0x.github.io/
 
 ## Dev
 

@@ -2,7 +2,7 @@
   "name": "jayf0x-app",
   "version": "1.0.1",
   "private": false,
-  "homepage": "https://jayf0x.github.io/site/",
+  "homepage": "https://jayf0x.github.io/",
   "scripts": {
     "dev": "vite",
     "dd": "rm -rf ./node_modules/.vite && vite",
