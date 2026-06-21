@@ -11,6 +11,7 @@ import { useIsMobile, useRegisterIsMobile } from "./hooks/useDevice";
 import { useAtomValue } from "jotai";
 import { Header } from "./components/Header";
 import { allCheckpointItems, PageName } from "./config";
+import { Contact } from "./pages/Contact";
 import { Home } from "./pages/Home";
 import { Resume } from "./pages/Resume";
 import { currentPageAtom } from "./store/generalStore";
@@ -19,6 +20,7 @@ import { WidgetsContainer } from "./widgets";
 const mappedPages: Record<PageName, () => React.JSX.Element> = {
   "127.0.0.1": Home,
   Résumé: Resume,
+  Contact: Contact,
 };
 
 export const App = () => {

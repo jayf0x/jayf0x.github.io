@@ -11,7 +11,7 @@ export const allCheckpointItems = [
   { tag: "Void", percentage: 0, invert: true },
 ] satisfies CheckpointItem[];
 
-export const allPageNames = ["127.0.0.1", "Résumé"] as const;
+export const allPageNames = ["127.0.0.1", "Résumé", "Contact"] as const;
 export const allWidgetNames = ["chat", "info"] as const;
 
 export type CheckPointTag = (typeof allCheckpointItems)[number]["tag"];
