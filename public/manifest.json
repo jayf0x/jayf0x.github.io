@@ -1,7 +1,7 @@
 {
   "name": "JAYF0X",
   "short_name": "JAYF0X",
-  "description": "",
+  "description": "jayf0x's portfolio — browse GitHub projects, view résumé, and explore interactive experiments.",
   "start_url": "/",
   "theme_color": "#000000",
   "background_color": "#000000",
@@ -11,14 +11,16 @@
   "display": "standalone",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/web-app-manifest-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/web-app-manifest-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
