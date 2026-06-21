@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bunx tsc *)",
+      "mcp__fileSystem__list_directory",
+      "mcp__fileSystem__read_text_file",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(curl -s \"http://localhost:5173/src/pages/Info/index.tsx\")",
+      "Bash(/Users/me/.bun/bin/bun run *)"
+    ]
+  }
+}
