@@ -1,4 +1,7 @@
 #red-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 78px;
   height: 78px;
   border-radius: 50%;
@@ -37,74 +40,4 @@
     0 4px 10px var(--bg-a65),
     inset 0 5px 10px var(--bg-a50),
     inset 0 -1px 3px var(--c-ff9696-a20);
-}
-
-/* ── Simulation controls ─────────────────────────────────────────────────── */
-
-.sim-ctrl-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: 1px solid var(--overlay-md);
-  background: var(--surface-a60);
-  color: var(--border-a55);
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition:
-    color 0.15s,
-    background 0.15s,
-    border-color 0.15s;
-}
-
-.sim-ctrl-btn:hover {
-  color: var(--border-a90);
-  background: var(--c-1e2337-a75);
-  border-color: var(--overlay-lg);
-}
-
-.sim-ctrl-row {
-  width: auto;
-  padding: 0 10px;
-  gap: 8px;
-}
-
-.sim-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  opacity: 0.6;
-  white-space: nowrap;
-}
-
-.speed-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100px;
-  height: 3px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.14);
-  outline: none;
-}
-
-.speed-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #34e1c4;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(52, 225, 196, 0.6);
-}
-
-.speed-slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border: none;
-  border-radius: 50%;
-  background: #34e1c4;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(52, 225, 196, 0.6);
 }
