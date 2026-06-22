@@ -6,7 +6,7 @@ export const Hero = () => (
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="text-2xl md:text-3xl font-black tracking-tight text-(--text)"
+      className="text-2xl md:text-3xl font-black tracking-tight text-text"
     >
       I build fast, playful web tools.
     </motion.h1>

@@ -99,7 +99,7 @@ export const Sidebar = ({ onSelect, onSort }: SidebarProps) => {
           type="button"
           aria-label="Recent projects"
           onClick={() => setOpen(true)}
-          className="fixed left-3 top-[7rem] z-30 flex h-8 w-8 items-center justify-center rounded-full border border-(--border) bg-(--surface)/90 backdrop-blur text-(--muted) hover:text-(--accent) shadow-lg transition-colors"
+          className="fixed left-3 top-[7rem] z-30 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-(--surface)/90 backdrop-blur text-(--muted) hover:text-(--accent) shadow-lg transition-colors"
         >
           <PanelLeftOpen size={14} />
         </button>
@@ -117,7 +117,7 @@ export const Sidebar = ({ onSelect, onSort }: SidebarProps) => {
               />
               <motion.div
                 key="drawer"
-                className="fixed left-0 top-0 bottom-0 z-50 w-64 bg-(--bg) border-r border-(--border) flex flex-col pt-4 pb-6 px-3 gap-1"
+                className="fixed left-0 top-0 bottom-0 z-50 w-64 bg-bg border-r border-border flex flex-col pt-4 pb-6 px-3 gap-1"
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
@@ -176,7 +176,7 @@ export const Sidebar = ({ onSelect, onSort }: SidebarProps) => {
         <div className="relative flex flex-col justify-start pt-3">
           <div
             onClick={() => setOpen((v) => !v)}
-            className="cursor-pointer transition-all hover:scale-150 flex h-6 w-4 items-center justify-center rounded-r-md border border-l-0 border-(--border) bg-(--surface) text-(--muted) hover:text-(--accent)"
+            className="cursor-pointer transition-all hover:scale-150 flex h-6 w-4 items-center justify-center rounded-r-md border border-l-0 border-border bg-(--surface) text-(--muted) hover:text-(--accent)"
           >
             {open ? <ChevronLeft size={10} /> : <PanelLeftOpen size={20} />}
           </div>
@@ -207,7 +207,7 @@ const SidebarSection = ({
         <button
           type="button"
           onClick={onSort}
-          className="mb-1.5 shrink-0 text-left font-mono text-nano uppercase tracking-widest text-(--accent) hover:text-(--text) transition-colors duration-150"
+          className="mb-1.5 shrink-0 text-left font-mono text-nano uppercase tracking-widest text-(--accent) hover:text-text transition-colors duration-150"
         >
           {title}
         </button>

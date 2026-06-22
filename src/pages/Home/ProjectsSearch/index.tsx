@@ -29,7 +29,7 @@ export const ProjectSection = () => {
   } = useProjectSearch();
 
   return (
-    <section className="flex flex-col min-h-[82vh] px-5 py-4 border-t border-(--border)/30">
+    <section className="flex flex-col min-h-[82vh] px-5 py-4 border-t border-border/30">
       <h2 className="mx-auto max-w-5xl w-full mb-3 font-mono text-nano uppercase tracking-widest text-(--muted)">
         Browse all projects
       </h2>
@@ -54,7 +54,7 @@ export const ProjectSection = () => {
               placeholder="Search projects…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-lg border border-(--border)/70 bg-(--surface) py-2.5 pl-9 pr-24 text-sm text-(--text) placeholder:text-(--overlay-a100) outline-none transition-all duration-150 focus:border-(--accent)/60 focus:shadow-[0_0_0_3px_rgba(79,124,255,0.08)]"
+              className="w-full rounded-lg border border-border/70 bg-(--surface) py-2.5 pl-9 pr-24 text-sm text-text placeholder:text-(--overlay-a100) outline-none transition-all duration-150 focus:border-(--accent)/60 focus:shadow-[0_0_0_3px_rgba(79,124,255,0.08)]"
             />
             <div className="absolute right-3 top-0 h-full flex items-center gap-2">
               <AnimatePresence mode="popLayout">
@@ -88,7 +88,7 @@ export const ProjectSection = () => {
                     transition={{ duration: 0.12 }}
                     className="pointer-events-none"
                   >
-                    <kbd className="font-mono text-nano border border-(--border) rounded px-1 py-0.5 text-(--muted) leading-none">
+                    <kbd className="font-mono text-nano border border-border rounded px-1 py-0.5 text-(--muted) leading-none">
                       /
                     </kbd>
                   </motion.div>
@@ -203,7 +203,7 @@ const LoadingSkeleton = () => (
     {[56, 72, 48, 64, 80].map((h, i) => (
       <div
         key={`skeleton-${i}`}
-        className="rounded-lg border border-(--border)/40 bg-(--surface)/60 overflow-hidden"
+        className="rounded-lg border border-border/40 bg-(--surface)/60 overflow-hidden"
         style={{ height: h }}
       >
         <div

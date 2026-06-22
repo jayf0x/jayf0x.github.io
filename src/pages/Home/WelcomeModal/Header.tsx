@@ -41,7 +41,7 @@ export const CardHeader = ({ onClose }: { onClose: () => void }) => (
       type="button"
       onClick={onClose}
       aria-label="Close"
-      className="shrink-0 mt-0.5 flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 bg-white/4 hover:bg-white/8 border border-white/7 text-(--muted) hover:text-(--text)"
+      className="shrink-0 mt-0.5 flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 bg-white/4 hover:bg-white/8 border border-white/7 text-(--muted) hover:text-text"
     >
       <X size={10} strokeWidth={2} />
     </button>

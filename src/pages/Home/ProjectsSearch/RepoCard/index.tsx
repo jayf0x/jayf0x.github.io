@@ -47,7 +47,7 @@ export const RepoCard = ({
 
   return (
     <article
-      className="group/card relative flex items-start gap-3 rounded-lg border border-(--border)/80 border-l-2 bg-(--surface)/90 overflow-hidden px-4 py-4 transition-all duration-200 hover:border-(--border) hover:bg-(--surface-2)/80 hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(0,0,0,0.4)]"
+      className="group/card relative flex items-start gap-3 rounded-lg border border-border/80 border-l-2 bg-(--surface)/90 overflow-hidden px-4 py-4 transition-all duration-200 hover:border-border hover:bg-(--surface-2)/80 hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(0,0,0,0.4)]"
       style={inlineStyle}
     >
       <RepoInfo

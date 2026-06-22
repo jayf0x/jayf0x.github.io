@@ -16,7 +16,7 @@ export const ActiveChips = ({
       <button
         type="button"
         onClick={onClearQuery}
-        className="group inline-flex items-center gap-1 rounded border border-(--border)/70 bg-(--surface) px-2 py-0.5 font-mono text-mini text-(--text) hover:border-(--accent)/50 transition-colors duration-100"
+        className="group inline-flex items-center gap-1 rounded border border-border/70 bg-(--surface) px-2 py-0.5 font-mono text-mini text-text hover:border-(--accent)/50 transition-colors duration-100"
       >
         <span className="text-(--muted)/50">"</span>
         {query.trim()}

@@ -72,7 +72,7 @@ const FlagshipCard = ({ repo, index }: { repo: GithubRepo; index: number }) => {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.12 + index * 0.07 }}
-      className="group relative flex flex-col gap-2 rounded-xl border border-(--border)/70 bg-(--surface)/70 p-4 overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-(--accent)/40 hover:bg-(--surface-2)/80 hover:shadow-[0_8px_28px_rgba(0,0,0,0.35)] snap-start shrink-0 w-[240px]"
+      className="group relative flex flex-col gap-2 rounded-xl border border-border/70 bg-(--surface)/70 p-4 overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-(--accent)/40 hover:bg-(--surface-2)/80 hover:shadow-[0_8px_28px_rgba(0,0,0,0.35)] snap-start shrink-0 w-[240px]"
     >
       {/* top accent bar, tinted by language */}
       <span
@@ -90,7 +90,7 @@ const FlagshipCard = ({ repo, index }: { repo: GithubRepo; index: number }) => {
         />
       </div>
 
-      <h3 className="text-base font-semibold text-(--text) tracking-tight leading-tight">
+      <h3 className="text-base font-semibold text-text tracking-tight leading-tight">
         {repo.name}
       </h3>
 
@@ -122,5 +122,5 @@ const FlagshipCard = ({ repo, index }: { repo: GithubRepo; index: number }) => {
 };
 
 const FlagshipSkeleton = () => (
-  <div className="rounded-xl border border-(--border)/40 bg-(--surface)/40 p-4 h-36 w-[240px] shrink-0 snap-start animate-pulse" />
+  <div className="rounded-xl border border-border/40 bg-(--surface)/40 p-4 h-36 w-[240px] shrink-0 snap-start animate-pulse" />
 );

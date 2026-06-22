@@ -118,7 +118,7 @@ export const InfoWidget = () => {
                     <button
                       type="button"
                       onClick={onClose}
-                      className="flex items-center justify-center w-6 h-6 rounded-lg transition-all duration-150 hover:bg-[var(--border)] hover:text-(--text)"
+                      className="flex items-center justify-center w-6 h-6 rounded-lg transition-all duration-150 hover:bg-[var(--border)] hover:text-text"
                       style={{
                         background: "var(--overlay-xs)",
                         border: "1px solid var(--border)",

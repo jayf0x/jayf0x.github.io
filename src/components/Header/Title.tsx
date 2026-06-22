@@ -34,7 +34,7 @@ export const Title = () => {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.08 }}
-          className="text-2xl font-black tracking-tight text-(--text) select-none"
+          className="text-2xl font-black tracking-tight text-text select-none"
         >
           <TextWithSecret text="Jonatan" secret="JayF0x" />
         </motion.div>

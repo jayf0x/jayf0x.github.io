@@ -223,7 +223,7 @@ export const ChatWidget = () => {
                 >
                   🤖
                 </div>
-                <span className="text-sm font-semibold text-(--text) tracking-tight">
+                <span className="text-sm font-semibold text-text tracking-tight">
                   <InfoPopover
                     title="OpenAI GPT 1"
                     items={[
@@ -238,7 +238,7 @@ export const ChatWidget = () => {
               <button
                 type="button"
                 onClick={onClose}
-                className="text-(--muted) hover:text-(--text) transition-colors rounded-lg p-1.5 hover:bg-white/5"
+                className="text-(--muted) hover:text-text transition-colors rounded-lg p-1.5 hover:bg-white/5"
               >
                 <X size={15} />
               </button>
@@ -492,7 +492,7 @@ export const ChatWidget = () => {
                   }
                   disabled={isPending}
                   maxLength={512}
-                  className="flex-1 bg-transparent text-sm text-(--text) outline-none disabled:opacity-40 min-w-0 placeholder:text-(--muted)"
+                  className="flex-1 bg-transparent text-sm text-text outline-none disabled:opacity-40 min-w-0 placeholder:text-(--muted)"
                 />
                 <button
                   type="button"

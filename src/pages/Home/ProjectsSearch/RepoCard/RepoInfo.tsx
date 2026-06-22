@@ -14,7 +14,7 @@ export const RepoInfo = ({
   <div className="min-w-0 flex-1 flex flex-col gap-2">
     {/* Name row */}
     <div className="flex items-center gap-2 flex-wrap">
-      <h3 className="text-base font-semibold text-(--text) tracking-tight leading-none">
+      <h3 className="text-base font-semibold text-text tracking-tight leading-none">
         {repo.name}
       </h3>
       {repo.archived && (

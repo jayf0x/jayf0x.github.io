@@ -5,7 +5,7 @@ import { Download, Github, GlobeIcon, LucidePackageCheck } from "lucide-react";
 import { PropsWithChildren } from "react";
 
 const iconCls =
-  "group/icon flex items-center justify-center w-7 h-7 rounded border border-(--border)/50 bg-(--surface)/70 hover:border-(--accent)/40 hover:bg-(--accent)/5 transition-all duration-150";
+  "group/icon flex items-center justify-center w-7 h-7 rounded border border-border/50 bg-(--surface)/70 hover:border-(--accent)/40 hover:bg-(--accent)/5 transition-all duration-150";
 
 export const RepoLinks = ({
   repo,
@@ -92,7 +92,7 @@ const AsyncIcon = ({
   const { data, isLoading } = query;
   if (isLoading)
     return (
-      <div className="h-7 w-7 animate-pulse rounded border border-(--border)/40 bg-(--surface)/60" />
+      <div className="h-7 w-7 animate-pulse rounded border border-border/40 bg-(--surface)/60" />
     );
   if (!data) return null;
   return (
