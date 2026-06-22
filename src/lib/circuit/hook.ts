@@ -2,19 +2,23 @@
 //
 // State machine overview:
 //
-//   latchBit    — which NAND gate is "active" (0 = top/Q, 1 = bot/Q̄).
-//                 Determines which loop path (loopQ vs loopQBar) the main comet follows.
+//   latchBit       — STORED bit displayed by the latch bubbles (0 = top/Q glows, 1 = bot/Q̄).
+//                    Flips the instant the cross-coupling comet arrives at the opposite
+//                    NAND's input — that's the physical moment the latch toggles.
 //
-//   headA       — main comet's cumulative distance along the active loop (never resets,
-//                 wraps each frame so it can cross the loop total cleanly).
+//   loopBit        — which loop path (loopQ vs loopQBar) the main comet follows.
+//                    Swapped at the CONV crossing so the path change is seamless
+//                    (both loops share the CONV → SPLIT2 prefix). May briefly differ
+//                    from latchBit while the comet finishes the old feedback arc.
 //
-//   pendingBit  — the NEXT latchBit, staged when the comet exits the NAND gate
-//                 (dLATCH_TRIGGER), applied at the next CONV crossing.
-//                 This delay gives the cross-coupling comet time to visually "arrive"
-//                 before the stored bit visually changes.
+//   headA          — main comet's cumulative distance along the active loop (never resets,
+//                    wraps each frame so it can cross the loop total cleanly).
 //
-//   bitPop_1    — flash intensity (0–1) that decays after each latch trigger.
-//                 Drives the latch bubble glow pulse.
+//   pendingLoopBit — the NEXT loopBit, staged when the cross-coupling comet ARRIVES,
+//                    applied at the next CONV crossing.
+//
+//   bitPop_1       — flash intensity (0–1) that decays after each latch toggle.
+//                    Drives the latch bubble glow pulse; fires on cross arrival.
 //
 //   ghostActive — a fading comet on the path we just LEFT (the old feedback arc).
 //   ghostHead   — ghost comet's distance along ghostCurrentPath.
@@ -89,12 +93,13 @@ export function useDigitalHeartbeat(
     // ── animation state ───────────────────────────────────────────────────
 
     // Main comet
-    let headA   = 0;      // cumulative distance along active loop
-    let latchBit = 0;     // 0 = loopQ (top NAND active), 1 = loopQBar (bot NAND active)
-    let pendingBit = 0;   // staged next latchBit; committed when headA crosses CONV (d=0)
+    let headA   = 0;          // cumulative distance along active loop
+    let latchBit = 0;         // STORED bit (bubble display); toggles when cross arrives
+    let loopBit  = 0;         // ACTIVE loop path; toggles at CONV for seamless comet transition
+    let pendingLoopBit = 0;   // staged loopBit; committed when headA crosses CONV (d=0)
 
     // Latch trigger pulse
-    let bitPop_1 = 0;     // decays 0→1 after each latch trigger; drives bubble glow
+    let bitPop_1 = 0;     // decays 0→1 after each latch toggle; drives bubble glow
 
     // Ghost comet (fades along the path just left after a latch toggle)
     let ghostActive = false;
@@ -163,7 +168,7 @@ export function useDigitalHeartbeat(
     // ── per-frame logic ───────────────────────────────────────────────────
 
     function step(dt: number) {
-      const loop = latchBit === 0 ? loopQ : loopQBar;
+      const loop = loopBit === 0 ? loopQ : loopQBar;
       const T    = loop.total;
       const prev = headA;
       headA += BASE * dt;
@@ -174,25 +179,25 @@ export function useDigitalHeartbeat(
 
       // ── Latch trigger: comet exits the active NAND gate ──────────────
       if (crossed(a, b, dLATCH_TRIGGER)) {
-        bitPop_1 = 1;
         // Ghost fires on the path we're about to leave
-        ghostCurrentPath = latchBit === 0 ? ghostQ : ghostQBar;
+        ghostCurrentPath = loopBit === 0 ? ghostQ : ghostQBar;
         ghostActive = true;
         ghostHead   = 0;
         ghostAlpha  = 1;
         // Cross-coupling comet fires from the active Q output
-        if (latchBit === 0) {
+        if (loopBit === 0) {
           cross1Active = true; cross1Head = 0; cross1Alpha = 1; // Q → R-input
         } else {
           cross2Active = true; cross2Head = 0; cross2Alpha = 1; // Q̄ → S-input
         }
-        // pendingBit is set when the cross comet ARRIVES (see below), not here
+        // latchBit + bubble flash fire when the cross comet ARRIVES (below)
       }
 
-      // ── Bit commit: apply pending latch state at CONV (loop start) ───
-      // Both loops start at CONV (d=0) so switching here is seamless.
-      if (pendingBit !== latchBit && crossed(a, b, 0)) {
-        latchBit = pendingBit;
+      // ── Loop swap: apply pending loop path at CONV (loop start) ──────
+      // Both loops share the CONV → SPLIT2 prefix so switching here is seamless.
+      // Decoupled from latchBit (which already toggled earlier on cross arrival).
+      if (pendingLoopBit !== loopBit && crossed(a, b, 0)) {
+        loopBit = pendingLoopBit;
       }
 
       if (headA >= T) headA -= T;
@@ -205,13 +210,16 @@ export function useDigitalHeartbeat(
         if (ghostHead >= ghostCurrentPath.total) { ghostActive = false; ghostHead = 0; }
       }
 
-      // Cross-coupling comets — pendingBit is staged when each ARRIVES at destination
+      // Cross-coupling comets — arrival flips stored latchBit + bubble flash,
+      // and schedules the comet's loop swap for the next CONV crossing.
       if (cross1Active) {
         cross1Head += BASE * dt;
         cross1Alpha = Math.max(0, 1 - cross1Head / crossPath1.total);
         if (cross1Head >= crossPath1.total) {
           cross1Active = false; cross1Head = 0;
-          pendingBit = 1 - latchBit; // cross comet arrived at R-input → schedule toggle
+          latchBit       = 1 - latchBit;  // stored bit toggles NOW — cross hit R-input
+          pendingLoopBit = 1 - loopBit;   // schedule comet path swap at next CONV
+          bitPop_1       = 1;             // flash the newly-active bubble
         }
       }
       if (cross2Active) {
@@ -219,7 +227,9 @@ export function useDigitalHeartbeat(
         cross2Alpha = Math.max(0, 1 - cross2Head / crossPath2.total);
         if (cross2Head >= crossPath2.total) {
           cross2Active = false; cross2Head = 0;
-          pendingBit = 1 - latchBit; // cross comet arrived at S-input → schedule toggle
+          latchBit       = 1 - latchBit;  // stored bit toggles NOW — cross hit S-input
+          pendingLoopBit = 1 - loopBit;
+          bitPop_1       = 1;
         }
       }
     }
@@ -245,7 +255,7 @@ export function useDigitalHeartbeat(
       // Blit static background (wires, gates)
       ctx.drawImage(bg, 0, 0, DESIGN_W, DESIGN_H);
 
-      const activeLoop = latchBit === 0 ? loopQ : loopQBar;
+      const activeLoop = loopBit === 0 ? loopQ : loopQBar;
 
       // Active-path aura: faint warm glow along current loop
       ctx.save();
@@ -327,20 +337,22 @@ export function useDigitalHeartbeat(
       }
 
       // Main comet — color shifts: teal near latch, warm near XOR, warm otherwise
+      // NAND proximity tracks loopBit (comet's path), not latchBit (display state),
+      // so the flash follows the comet even after latchBit flips early on cross arrival.
       const headPtA = pointAt(activeLoop, headA);
       const wGateA  = near(headPtA, XOR.cx, XOR.cy, 42);
       const wN1A    = near(
         headPtA,
-        latchBit === 0 ? LATCH.top.cx : LATCH.bot.cx,
-        latchBit === 0 ? LATCH.top.cy : LATCH.bot.cy,
+        loopBit === 0 ? LATCH.top.cx : LATCH.bot.cx,
+        loopBit === 0 ? LATCH.top.cy : LATCH.bot.cy,
         42,
       );
 
       drawFlash(ctx, XOR.cx, XOR.cy, wGateA, GCOL.gate);
       drawFlash(
         ctx,
-        latchBit === 0 ? LATCH.top.cx : LATCH.bot.cx,
-        latchBit === 0 ? LATCH.top.cy : LATCH.bot.cy,
+        loopBit === 0 ? LATCH.top.cx : LATCH.bot.cx,
+        loopBit === 0 ? LATCH.top.cy : LATCH.bot.cy,
         wN1A,
         GCOL.latch,
       );

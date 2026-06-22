@@ -21,7 +21,7 @@ export const C = {
   inkDim: "#46505f",  // feedback arc wire color (dimmer, thinner)
   warm:   "255,184,84",
   teal:   "255,124,84",
-  gateBg: "rgba(24, 32, 48, 1)", // gate body fill — opaque slate so bodies read distinctly against page bg
+  gateBg: "#2a3349", // gate body fill — opaque mid-slate, distinct against #060608 page bg
 } as const;
 
 // Gate glow colors (RGB strings for use in rgba()).
