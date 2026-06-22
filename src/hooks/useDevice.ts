@@ -4,13 +4,17 @@ import { useCallback } from "react";
 
 const MOBILE_BREAKPOINT = 768;
 
+const getIsBreakpoint = (): boolean => window.innerWidth < MOBILE_BREAKPOINT;
+
 export const useRegisterIsMobile = () => {
   const setIsMobile = useSetAtom(isMobileAtom);
 
   return useCallback(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
 
-    const onChange = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    setIsMobile(getIsBreakpoint());
+
+    const onChange = () => setIsMobile(getIsBreakpoint());
 
     mql.addEventListener("change", onChange);
     return () => {

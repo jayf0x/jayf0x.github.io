@@ -6,15 +6,17 @@ import type { Point } from "./types";
 // ─── return types ─────────────────────────────────────────────────────────────
 
 export type NotGateShape = {
-  tri: Point[];               // three vertices of the triangle body
+  tri: Point[]; // three vertices of the triangle body
   bub: [number, number, number]; // [cx, cy, r] of the inversion bubble
-  cx: number; cy: number;     // visual center (for flash/glow)
+  cx: number;
+  cy: number; // visual center (for flash/glow)
 };
 
 export type XorGateShape = {
-  outerArc: string;  // SVG path: the dashed back arc (characteristic XOR extra curve)
-  body: string;      // SVG path: the gate body (D-shape with curved inputs)
-  cx: number; cy: number; // visual center
+  outerArc: string; // SVG path: the dashed back arc (characteristic XOR extra curve)
+  body: string; // SVG path: the gate body (D-shape with curved inputs)
+  cx: number;
+  cy: number; // visual center
 };
 
 export type SrLatchShape = {
@@ -24,7 +26,7 @@ export type SrLatchShape = {
   // cross[0]: Q output → R gate input (feeds back to toggle state)
   // cross[1]: Q̄ output → S gate input (feeds back to toggle state)
   cross: Point[][];
-  qOut:    Point; // Q  output pin (top NAND, right side)
+  qOut: Point; // Q  output pin (top NAND, right side)
   qBarOut: Point; // Q̄ output pin (bot NAND, right side)
 };
 
@@ -34,9 +36,9 @@ export type SrLatchShape = {
 export function notGate(ix: number, iy: number): NotGateShape {
   return {
     tri: [
-      [ix,      iy - 16],
-      [ix,      iy + 16],
-      [ix + 34, iy     ],
+      [ix, iy - 16],
+      [ix, iy + 16],
+      [ix + 34, iy],
     ] as Point[],
     bub: [ix + 39, iy, 5],
     cx: ix + 18,
@@ -64,22 +66,37 @@ export function srLatch(lx: number, cy: number, gap = 50): SrLatchShape {
   const bubR = 5;
 
   // Cross-coupling wires: each output routes back diagonally to the other gate's input.
-  // The 45° diagonal is exact when gap=100 (N=20), because the vertical drop equals
-  // the horizontal distance: (ty+N → by-10 needs dy=by-10-ty-N = gap-10-2N = 60 = gap-N-40...
-  // simplified: at gap=100, N=20, the diagonal segment [lx+50,ty+N]→[lx-N,by-10] has |dx|=70=|dy|).
-  const N = (gap - 60) / 2; // = 20 when gap=100
+  // N controls the breathing room: longer vertical leg from the source gate output,
+  // longer horizontal entry leg into the destination gate — both shift the diagonal
+  // further from gate bodies for visual clearance.
+  const N = (gap - 60) / 2 + 10; // = 30 at gap=100 — extra clearance from NAND gates
+  // Splitter dot (qOut / qBarOut) sits OUT_GAP px right of the bubble's right edge
+  // (bubble right edge = lx+45+5 = lx+50). Visual separation between the NAND
+  // inversion bubble and the splitter / cross-coupling origin.
+  const OUT_GAP = 10;
+  const qx = lx + 50 + OUT_GAP; // = lx + 60
   const cross: Point[][] = [
-    // cross[0]: Q out [lx+50,ty] → down N → 45°↙ → right into bot upper pin [lx, by-10]
-    [[lx + 50, ty], [lx + 50, ty + N], [lx - N, by - 10], [lx, by - 10]],
-    // cross[1]: Q̄ out [lx+50,by] → up N  → 45°↖ → right into top lower pin [lx, ty+10]
-    [[lx + 50, by], [lx + 50, by - N], [lx - N, ty + 10], [lx, ty + 10]],
+    // cross[0]: Q out [qx,ty] → down N → diagonal → into bot upper pin [lx, by-10]
+    [
+      [qx, ty],
+      [qx, ty + N],
+      [lx - N, by - 10],
+      [lx, by - 10],
+    ],
+    // cross[1]: Q̄ out [qx,by] → up N → diagonal → into top lower pin [lx, ty+10]
+    [
+      [qx, by],
+      [qx, by - N],
+      [lx - N, ty + 10],
+      [lx, ty + 10],
+    ],
   ];
 
   return {
     top: { path: nandPath(ty), bub: [lx + 45, ty, bubR], cx: lx + 20, cy: ty },
     bot: { path: nandPath(by), bub: [lx + 45, by, bubR], cx: lx + 20, cy: by },
     cross,
-    qOut:    [lx + 50, ty],
-    qBarOut: [lx + 50, by],
+    qOut: [qx, ty],
+    qBarOut: [qx, by],
   };
 }

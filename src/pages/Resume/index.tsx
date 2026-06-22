@@ -22,7 +22,7 @@ export const Resume = () => {
           ref={buttonRef}
           href={RESUME_DOWNLOAD_URL}
           download
-          className="no-underline"
+          className="block no-underline"
           aria-label="Download resume"
         >
           <div

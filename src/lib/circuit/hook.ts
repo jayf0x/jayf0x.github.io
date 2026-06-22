@@ -126,31 +126,40 @@ export function useDigitalHeartbeat(
       canvas.width  = Math.round(w * DPR);
       canvas.height = Math.round(h * DPR);
 
-      scale = isMobile
-        ? Math.min(h / DESIGN_W, w / DESIGN_H) * 1.25
-        : Math.min(w / DESIGN_W, h / DESIGN_H) * 0.95;
-
       // Read actual button position so the orbit aligns with the DOM element.
       let targetX = w / 2;
       let targetY = h / 2;
       if (buttonRef?.current) {
         const btnRect  = buttonRef.current.getBoundingClientRect();
         const contRect = container!.getBoundingClientRect();
-        targetX = btnRect.left - contRect.left + btnRect.width  / 2;
-        targetY = btnRect.top  - contRect.top  + btnRect.height / 2;
+        targetX = Math.round(btnRect.left - contRect.left + btnRect.width  / 2);
+        targetY = Math.round(btnRect.top  - contRect.top  + btnRect.height / 2);
       }
 
-      // Clamp scale so the full diagram fits around the button.
-      // Diagram extends 400px left, 400px right (symmetric), 150px above/below from CIRC_CX/CY.
+      if (isMobile) {
+        // Rotated 90° CCW: design x-axis (feedLeft=90 → feedRight=890, 800 units)
+        // maps to screen height; design y-axis (feedTop=110 → feedBot=410, 300 units)
+        // maps to screen width. Scale to fit content extents, not full DESIGN bounds.
+        const CONTENT_X = 800;
+        const CONTENT_Y = 300;
+        scale = Math.min(w / CONTENT_Y, h / CONTENT_X) * 0.95;
+        // Clamp so the rotated content stays within the viewport. CIRC_CX is anchored
+        // at targetY; design x extends ±400 around CIRC_CX → screen y range targetY ± 400*scale.
+        const fitV = Math.min(targetY / (CIRC_CX - 90), (h - targetY) / (890 - CIRC_CX));
+        scale = Math.min(scale, fitV);
+        mobTx = targetX - CIRC_CY * scale;
+        mobTy = targetY + CIRC_CX * scale;
+        return;
+      }
+
+      // Desktop: symmetric content (CIRC_CX ± 400, CIRC_CY ± 150). Scale to fit the
+      // available half around the button (button is at left-1/2 so halves are equal).
       const fitH = Math.min(targetX / (CIRC_CX - 90), (w - targetX) / (890 - CIRC_CX));
       const fitV = Math.min(targetY / (CIRC_CY - 110), (h - targetY) / (410 - CIRC_CY));
-      scale = Math.min(scale, fitH, fitV);
+      scale = Math.min(fitH, fitV) * 0.95;
 
-      ox    = targetX - CIRC_CX * scale;
-      oy    = targetY - CIRC_CY * scale;
-      // Mobile: diagram is rotated 90° CCW (swap width/height axes)
-      mobTx = targetX - CIRC_CY * scale;
-      mobTy = targetY + CIRC_CX * scale;
+      ox = targetX - CIRC_CX * scale;
+      oy = targetY - CIRC_CY * scale;
     }
 
     // ── animation helpers ─────────────────────────────────────────────────
@@ -252,12 +261,11 @@ export function useDigitalHeartbeat(
         ctx.setTransform(scale * DPR, 0, 0, scale * DPR, ox * DPR, oy * DPR);
       }
 
-      // Blit static background (wires, gates)
-      ctx.drawImage(bg, 0, 0, DESIGN_W, DESIGN_H);
-
       const activeLoop = loopBit === 0 ? loopQ : loopQBar;
 
-      // Active-path aura: faint warm glow along current loop
+      // Active-path aura: faint warm glow along current loop.
+      // Drawn BEFORE the static bg blit so opaque gate fills cover the aura where it
+      // crosses gate bodies — the aura then reads as a glow on the wires only.
       ctx.save();
       ctx.strokeStyle = `rgba(${C.warm},0.12)`;
       ctx.lineWidth   = 2;
@@ -270,7 +278,7 @@ export function useDigitalHeartbeat(
       ctx.restore();
 
       // NOT branch aura: glows while main comet is between SPLIT1 and XOR top-input.
-      // tBranch ∈ (0,1) maps the window; sin curve ramps up and back down smoothly.
+      // Also pre-bg so the NOT triangle and XOR body cover it within their fills.
       const ha       = ((headA % activeLoop.total) + activeLoop.total) % activeLoop.total;
       const tBranch  = (ha - dSPLIT1_dist) / (dXOR_dist - dSPLIT1_dist);
       const notAura  = tBranch > 0 && tBranch < 1 ? Math.sin(tBranch * Math.PI) * 0.45 : 0;
@@ -289,6 +297,10 @@ export function useDigitalHeartbeat(
         ctx.restore();
       }
 
+      // Blit static background (wires + opaque gate fills) on top of auras.
+      ctx.drawImage(bg, 0, 0, DESIGN_W, DESIGN_H);
+
+      // Radial flash glows around gate centers — drawn ON TOP of bg for visible halo.
       drawFlash(ctx, NOT.cx, NOT.cy, notAura * 0.8, GCOL.not);
 
       // NOT branch comet: travels SPLIT1 → NOT gate → XOR bot input in parallel
