@@ -5,17 +5,17 @@
 import type { Path } from "./types";
 import { C, GCOL, CIRC_CX, CIRC_CY, CIRC_R, tau } from "./config";
 import { pointAt } from "./path";
-import { NOT, XOR, LATCH, WIRES, SPLITTER_DOTS } from "./topology";
+import { XOR, LATCH, WIRES, SPLITTER_DOTS } from "./topology";
 
 // ─── background (static, drawn once) ─────────────────────────────────────────
 
 export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.clearRect(0, 0, CIRC_CX * 2, CIRC_CY * 2);
 
-  // Wires: main (ink) vs feedback (inkDim)
+  // Wires: main (ink) vs Q̅ feedback (inkDim)
   WIRES.forEach((w, i) => {
-    bgx.strokeStyle = i >= 7 ? C.inkDim : C.ink;
-    bgx.lineWidth = i >= 7 ? 1 : 1.6;
+    bgx.strokeStyle = i >= 4 ? C.inkDim : C.ink;
+    bgx.lineWidth = i >= 4 ? 1 : 1.6;
     bgx.lineJoin = "round";
     bgx.lineCap = "round";
     bgx.beginPath();
@@ -23,22 +23,11 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
     bgx.stroke();
   });
 
-  // Circle (CV button placeholder)
+  // Circle (memory node)
   bgx.strokeStyle = C.ink;
   bgx.lineWidth = 1.6;
   bgx.beginPath();
   bgx.arc(CIRC_CX, CIRC_CY, CIRC_R, 0, tau);
-  bgx.stroke();
-
-  // NOT gate: triangle + bubble
-  bgx.strokeStyle = C.ink;
-  bgx.lineWidth = 2.5;
-  bgx.beginPath();
-  NOT.tri.forEach((p, i) => (i ? bgx.lineTo(p[0], p[1]) : bgx.moveTo(p[0], p[1])));
-  bgx.closePath();
-  bgx.stroke();
-  bgx.beginPath();
-  bgx.arc(NOT.bub[0], NOT.bub[1], NOT.bub[2], 0, tau);
   bgx.stroke();
 
   // XOR gate: dashed back arc first, then body
@@ -49,7 +38,7 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.setLineDash([]);
   bgx.stroke(new Path2D(XOR.body));
 
-  // SR NAND latch — two gate bodies + bubbles
+  // RS NOR latch — two gate bodies + output bubbles
   bgx.strokeStyle = C.ink;
   bgx.lineWidth = 1.6;
   [LATCH.top, LATCH.bot].forEach((g) => {

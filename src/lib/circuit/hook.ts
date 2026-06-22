@@ -2,10 +2,11 @@ import type { RefObject } from "react";
 import { useEffect } from "react";
 import { DESIGN_W, DESIGN_H, BASE, CIRC_CX, CIRC_CY, CIRC_R, C, GCOL, tau } from "./config";
 import { pointAt } from "./path";
-import { NOT, XOR, LATCH, WIRES, loopHi, ghostPath, dLATCH_TRIGGER, dSPLIT1_dist, dXOR_dist } from "./topology";
+import { XOR, LATCH, loopHi, dLATCH_TRIGGER } from "./topology";
 import { renderStatic, drawComet, drawFlash } from "./draw";
 
-const CCX = (90 + 660) / 2;
+// Center of the new composition: x spans 360–660, y spans 110–410
+const CCX = (360 + 660) / 2; // 510
 const CCY = 260;
 
 export function useDigitalHeartbeat(
@@ -39,9 +40,6 @@ export function useDigitalHeartbeat(
     // ── animation state ───────────────────────────────────────────────────
     let headA = 0;
     let bitPop_1 = 0;
-    let ghostActive = false;
-    let ghostHead = 0;
-    let ghostAlpha = 0;
     let last = 0;
     let rafId = 0;
 
@@ -96,22 +94,10 @@ export function useDigitalHeartbeat(
       const b = ((headA % T) + T) % T;
       if (crossed(a, b, dLATCH_TRIGGER)) {
         bitPop_1 = 1;
-        ghostActive = true;
-        ghostHead = 0;
-        ghostAlpha = 1;
       }
 
       if (headA >= T) headA -= T;
       if (bitPop_1 > 0) bitPop_1 = Math.max(0, bitPop_1 - dt * 3.2);
-
-      if (ghostActive) {
-        ghostHead += BASE * dt;
-        ghostAlpha = Math.max(0, 1 - ghostHead / ghostPath.total);
-        if (ghostHead >= ghostPath.total) {
-          ghostActive = false;
-          ghostHead = 0;
-        }
-      }
     }
 
     function frame(now: number) {
@@ -141,28 +127,7 @@ export function useDigitalHeartbeat(
       ctx.stroke();
       ctx.restore();
 
-      // NOT branch aura: glows while main comet is between SPLIT1 and XOR input
-      const ha = ((headA % loopHi.total) + loopHi.total) % loopHi.total;
-      const tBranch = (ha - dSPLIT1_dist) / (dXOR_dist - dSPLIT1_dist);
-      const notAura = tBranch > 0 && tBranch < 1 ? Math.sin(tBranch * Math.PI) * 0.45 : 0;
-
-      if (notAura > 0) {
-        ctx.save();
-        ctx.strokeStyle = `rgba(${C.warm},${notAura})`;
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        [WIRES[2], WIRES[3]].forEach(w => {
-          ctx.beginPath();
-          w.forEach((p, j) => j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
-          ctx.stroke();
-        });
-        ctx.restore();
-      }
-
-      drawFlash(ctx, NOT.cx, NOT.cy, notAura * 0.8, GCOL.not);
-
-      // Latch bubbles: Q glows stored, Q-bar stays dim
+      // Latch bubbles: Q glows on beat arrival, Q̅ stays dim
       [
         { x: LATCH.top.bub[0], y: LATCH.top.bub[1], pop: bitPop_1, primary: true  },
         { x: LATCH.bot.bub[0], y: LATCH.bot.bub[1], pop: 0,        primary: false },
@@ -180,15 +145,7 @@ export function useDigitalHeartbeat(
         ctx.restore();
       });
 
-      // Ghost comet: Q-bar → bottom arc, fades over its path
-      if (ghostActive && ghostAlpha > 0.02) {
-        ctx.save();
-        ctx.globalAlpha = ghostAlpha;
-        drawComet(ctx, ghostPath, ghostHead, GCOL.latch, 40, 3);
-        ctx.restore();
-      }
-
-      // Main comet
+      // Main comet — color shifts teal at latch, warm-amber at XOR, warm elsewhere
       const headPtA = pointAt(loopHi, headA);
       const wGateA  = near(headPtA, XOR.cx, XOR.cy, 42);
       const wN1A    = near(headPtA, LATCH.top.cx, LATCH.top.cy, 42);
