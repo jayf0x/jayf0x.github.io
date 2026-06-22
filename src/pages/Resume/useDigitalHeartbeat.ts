@@ -107,41 +107,33 @@ export function useDigitalHeartbeat(
     const CONV: Point = [90, 260];
 
     const WIRES: Point[][] = [
-      [CONV, [90, 250], [360, 250]],
-      [CONV, [90, 290], [210, 290], [240, 290]],
-      [
-        [284, 290],
-        [330, 290],
-        [330, 270],
-        [360, 270],
-      ],
-      [
-        [404, 260],
-        [CIRC_CX - CIRC_R, CIRC_CY],
-      ],
-      [
-        [CIRC_CX + CIRC_R, CIRC_CY],
-        [550, 210],
-        [560, 210],
-      ],
-      [
-        [CIRC_CX + CIRC_R, CIRC_CY],
-        [550, 310],
-        [560, 310],
-      ],
-      [[618, 210], [660, 210], [660, 110], [90, 110], CONV],
-      [[618, 310], [660, 310], [660, 410], [90, 410], CONV],
-      [
-        [618, 210],
-        [560, 301],
-      ],
-      [
-        [618, 310],
-        [560, 219],
-      ],
+      [CONV, [90, 250], [360, 250]],                              // 0: top AND input (comA path)
+      [CONV, [90, 290], [210, 290], [240, 290]],                 // 1: to NOT gate (comB path)
+      [[284, 290], [330, 290], [330, 270], [360, 270]],          // 2: NOT→AND bottom (comB path)
+      [[404, 260], [CIRC_CX - CIRC_R, CIRC_CY]],                // 3: AND out→circle
+      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 210], [560, 210]],    // 4: circle→N1
+      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 310], [560, 310]],    // 5: circle→N2
+      [[618, 210], [660, 210], [660, 110], [90, 110], CONV],     // 6: N1 outer feedback
+      [[618, 310], [660, 310], [660, 410], [90, 410], CONV],     // 7: N2 outer feedback
     ];
 
-    const PRE: Point[] = [
+    // Cross-coupling wires: diagonal X through the gap between gates (y=228–292),
+    // drawn after gate shapes so they're clearly visible as schematic cross-connections.
+    const CROSS: Point[][] = [
+      [[618, 210], [618, 228], [560, 292], [560, 301]], // N1 out → N2 upper input
+      [[618, 310], [618, 292], [560, 228], [560, 219]], // N2 out → N1 lower input
+    ];
+
+    // comA: direct top-AND-input route (no NOT gate)
+    const PRE_HI: Point[] = [
+      CONV,
+      [90, 250],
+      [360, 250],
+      [404, 260],
+      [CIRC_CX - CIRC_R, CIRC_CY],
+    ];
+    // comB: through NOT gate then AND bottom input
+    const PRE_LO: Point[] = [
       CONV,
       [90, 290],
       [210, 290],
@@ -153,8 +145,10 @@ export function useDigitalHeartbeat(
       [404, 260],
       [CIRC_CX - CIRC_R, CIRC_CY],
     ];
+
     const topArc = arcPts(true);
     const botArc = arcPts(false);
+
     const SUF_HI: Point[] = [
       [550, 210],
       [560, 210],
@@ -174,16 +168,23 @@ export function useDigitalHeartbeat(
       CONV,
     ];
 
-    const loopHi = buildPath([...PRE, ...topArc.slice(1), ...SUF_HI]);
-    const loopLo = buildPath([...PRE, ...botArc.slice(1), ...SUF_LO]);
-    const dTrig = buildPath(PRE).total;
-    // Visual trigger: when comet reaches NOR gate output bubble (after arc + short run)
-    const dNOR = buildPath([
-      ...PRE,
+    const loopHi = buildPath([...PRE_HI, ...topArc.slice(1), ...SUF_HI]);
+    const loopLo = buildPath([...PRE_LO, ...botArc.slice(1), ...SUF_LO]);
+
+    // Distance at which each comet exits its NOR gate output bubble
+    const dNOR_A = buildPath([
+      ...PRE_HI,
       ...topArc.slice(1),
       [550, 210],
       [560, 210],
       [N1.bub[0], 210],
+    ]).total;
+    const dNOR_B = buildPath([
+      ...PRE_LO,
+      ...botArc.slice(1),
+      [550, 310],
+      [560, 310],
+      [N2.bub[0], 310],
     ]).total;
 
     const bg = document.createElement("canvas");
@@ -198,8 +199,8 @@ export function useDigitalHeartbeat(
       bgx.clearRect(0, 0, DESIGN_W, DESIGN_H);
 
       WIRES.forEach((w, i) => {
-        bgx.strokeStyle = i >= 8 ? C.inkDim : C.ink;
-        bgx.lineWidth = 1.6;
+        bgx.strokeStyle = i >= 6 ? C.inkDim : C.ink;
+        bgx.lineWidth = i >= 6 ? 1 : 1.6;
         bgx.lineJoin = "round";
         bgx.lineCap = "round";
         bgx.beginPath();
@@ -236,6 +237,19 @@ export function useDigitalHeartbeat(
         bgx.stroke();
       });
 
+      // Cross-coupling X — drawn after gate shapes, solid teal
+      bgx.strokeStyle = `rgba(${GCOL.nor},0.65)`;
+      bgx.lineWidth = 1.4;
+      bgx.lineJoin = "round";
+      bgx.lineCap = "round";
+      CROSS.forEach((w) => {
+        bgx.beginPath();
+        w.forEach((p, j) =>
+          j ? bgx.lineTo(p[0], p[1]) : bgx.moveTo(p[0], p[1]),
+        );
+        bgx.stroke();
+      });
+
       ([CONV, [CIRC_CX + CIRC_R, CIRC_CY]] as Point[]).forEach(([x, y]) => {
         bgx.fillStyle = C.ink;
         bgx.beginPath();
@@ -250,9 +264,11 @@ export function useDigitalHeartbeat(
     container.appendChild(canvas);
     const ctx = canvas.getContext("2d")!;
 
-    let head = 0;
-    let q = 0;
-    let bitPop = 0;
+    let headA = 0;
+    let headB = 0; // initialised after loopLo is built below
+    let bitPop_1 = 0;
+    let bitPop_2 = 0;
+    let lastFired = 0; // 1 = N1, 0 = N2 — tracks which gate last fired (stored bit)
     let last = 0;
     let scale = 1;
     let ox = 0;
@@ -260,10 +276,11 @@ export function useDigitalHeartbeat(
     let mobMode = false;
     let mobTx = 0;
     let mobTy = 0;
-    let cw = 0;
     let rafId = 0;
 
-    const CCX = (90 + 660) / 2; // 375 — content horizontal center
+    headB = loopLo.total / 2; // start comB half a cycle behind comA
+
+    const CCX = (90 + 660) / 2;
     const CCY = 260;
 
     function positionOverlays() {
@@ -280,7 +297,6 @@ export function useDigitalHeartbeat(
     }
 
     function resize(w: number, h: number) {
-      cw = w;
       const DPR = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(w * DPR);
       canvas.height = Math.round(h * DPR);
@@ -300,19 +316,31 @@ export function useDigitalHeartbeat(
     }
 
     function step(dt: number) {
-      const T = loopHi.total;
-      const prev = head;
-      head += BASE * dt;
-      const a = ((prev % T) + T) % T;
-      const b = ((head % T) + T) % T;
-      if (crossed(a, b, dTrig)) {
-        q = 1 - q;
+      const TA = loopHi.total;
+      const TB = loopLo.total;
+      const prevA = headA;
+      const prevB = headB;
+      headA += BASE * dt;
+      headB += BASE * dt;
+
+      const aA = ((prevA % TA) + TA) % TA;
+      const bA = ((headA % TA) + TA) % TA;
+      if (crossed(aA, bA, dNOR_A)) {
+        bitPop_1 = 1;
+        lastFired = 1;
       }
-      if (crossed(a, b, dNOR)) {
-        bitPop = 1;
-      } // visual trigger at NOR gate, not red button
-      if (head >= T) head -= T;
-      if (bitPop > 0) bitPop = Math.max(0, bitPop - dt * 3.2);
+
+      const aB = ((prevB % TB) + TB) % TB;
+      const bB = ((headB % TB) + TB) % TB;
+      if (crossed(aB, bB, dNOR_B)) {
+        bitPop_2 = 1;
+        lastFired = 0;
+      }
+
+      if (headA >= TA) headA -= TA;
+      if (headB >= TB) headB -= TB;
+      if (bitPop_1 > 0) bitPop_1 = Math.max(0, bitPop_1 - dt * 3.2);
+      if (bitPop_2 > 0) bitPop_2 = Math.max(0, bitPop_2 - dt * 3.2);
     }
 
     function near(pt: Point, cx: number, cy: number, th: number) {
@@ -372,29 +400,65 @@ export function useDigitalHeartbeat(
       }
       ctx.drawImage(bg, 0, 0, DESIGN_W, DESIGN_H);
 
-      // Stored energy — at NOR bubble center; active = bright, inactive = ghost
+      // Subtle active-path glow for both loops
+      for (const path of [loopHi, loopLo]) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(${C.warm},0.12)`;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(path.segs[0].a[0], path.segs[0].a[1]);
+        for (const s of path.segs) ctx.lineTo(s.b[0], s.b[1]);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // NOR bubbles: bright pop when firing, medium glow for stored bit, dim otherwise
       [
-        [N1.bub[0], N1.bub[1], q === 1],
-        [N2.bub[0], N2.bub[1], q === 0],
-      ].forEach(([x, y, activeVal]) => {
-        const active = activeVal as boolean;
+        { x: N1.bub[0], y: N1.bub[1], pop: bitPop_1, stored: lastFired === 1 },
+        { x: N2.bub[0], y: N2.bub[1], pop: bitPop_2, stored: lastFired === 0 },
+      ].forEach(({ x, y, pop, stored }) => {
+        const alpha = pop > 0 ? 1 : stored ? 0.55 : 0.15;
+        const radius = pop > 0 ? 5 + pop * 2 : stored ? 4 : 3;
+        const blur = pop > 0 ? 14 : stored ? 8 : 2;
         ctx.save();
         ctx.shadowColor = `rgb(${C.teal})`;
-        ctx.shadowBlur = active ? 14 : 4;
-        ctx.fillStyle = `rgba(${C.teal},${active ? 1 : 0.22})`;
+        ctx.shadowBlur = blur;
+        ctx.fillStyle = `rgba(${C.teal},${alpha})`;
         ctx.beginPath();
-        ctx.arc(x as number, y as number, active ? 5 + bitPop * 2 : 3, 0, tau);
+        ctx.arc(x, y, radius, 0, tau);
         ctx.fill();
         ctx.restore();
       });
 
-      const headPt = pointAt(q ? loopHi : loopLo, head);
-      flash(NOT.cx, NOT.cy, near(headPt, NOT.cx, NOT.cy, 38), GCOL.not);
-      flash(AND.cx, AND.cy, near(headPt, AND.cx, AND.cy, 42), GCOL.and);
-      flash(N1.cx, N1.cy, near(headPt, N1.cx, N1.cy, 42), GCOL.nor);
-      flash(N2.cx, N2.cy, near(headPt, N2.cx, N2.cy, 42), GCOL.nor);
+      const headPtA = pointAt(loopHi, headA);
+      const headPtB = pointAt(loopLo, headB);
 
-      comet(q ? loopHi : loopLo, head, C.warm, 54, 4);
+      const wNotB = near(headPtB, NOT.cx, NOT.cy, 38);
+      const wAndA = near(headPtA, AND.cx, AND.cy, 42);
+      const wAndB = near(headPtB, AND.cx, AND.cy, 42);
+      const wN1A = near(headPtA, N1.cx, N1.cy, 42);
+      const wN2B = near(headPtB, N2.cx, N2.cy, 42);
+
+      flash(NOT.cx, NOT.cy, wNotB, GCOL.not);
+      flash(AND.cx, AND.cy, Math.max(wAndA, wAndB), GCOL.and);
+      flash(N1.cx, N1.cy, wN1A, GCOL.nor);
+      flash(N2.cx, N2.cy, wN2B, GCOL.nor);
+
+      // Comet color shifts as it passes each gate
+      const colA = wN1A > 0.2 ? GCOL.nor : wAndA > 0.2 ? GCOL.and : C.warm;
+      const colB =
+        wN2B > 0.2
+          ? GCOL.nor
+          : wAndB > 0.2
+            ? GCOL.and
+            : wNotB > 0.2
+              ? GCOL.not
+              : C.warm;
+
+      comet(loopHi, headA, colA, 54, 4);
+      comet(loopLo, headB, colB, 54, 4);
 
       rafId = requestAnimationFrame(frame);
     }
