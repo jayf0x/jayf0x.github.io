@@ -3,7 +3,6 @@ import type { ConwayControls } from "@/lib/conway/conway";
 import { createConwayEngine } from "@/lib/conway/conway";
 import { Github, Linkedin, Package, Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import "./styles.css";
 
 type SimMode = "conway" | "daynight";
 
@@ -88,37 +87,37 @@ export const Contact = () => {
             Find me on
           </p>
 
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-3">
             {links.map(({ platform, handle, href, icon, color }) => (
               <li
                 key={platform}
-                className=" backdrop-blur-md bg-white/20 rounded-md"
+                className="rounded-md bg-[#111e]"
                 style={{
-                  backdropFilter: "blur(4px) brightness(0.01)",
+                  backdropFilter: "blur(4px)",
                 }}
               >
                 <a
                   href={href}
                   target="_blank"
                   rel="noreferrer"
-                  className="pointer-events-auto group flex items-center gap-4 px-4 py-3.5 rounded-lg border border-(--border)/50 hover:border-(--border) hover:bg-(--overlay-xs) transition-colors duration-150"
+                  className="pointer-events-auto group flex items-center gap-4 px-4 py-3.5 rounded-md border border-white/10 bg-white/5 dark:bg-black/30 hover:border-white/20 hover:bg-white/10 transition-colors duration-150"
                 >
                   <span
-                    className={`shrink-0 flex items-center justify-center w-7 h-7 rounded-md text-[13px] ${color}`}
+                    className={`shrink-0 flex items-center justify-center w-7 h-7 rounded-md text-[13px] ${color} ring-1 ring-white/6`}
                   >
                     {icon}
                   </span>
 
                   <span className="flex-1 min-w-0">
-                    <span className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5 text-(--muted)/40">
+                    <span className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5 text-neutral-400">
                       {platform}
                     </span>
-                    <span className="block font-mono text-[13px] truncate text-(--muted)/80 group-hover:text-(--muted) transition-colors duration-150">
+                    <span className="block font-mono text-[13px] truncate text-white/90 group-hover:text-white transition-colors duration-150">
                       {handle}
                     </span>
                   </span>
 
-                  <span className="font-mono text-[10px] text-(--muted)/0 group-hover:text-(--muted)/40 transition-colors duration-150">
+                  <span className="font-mono text-[10px] text-white/40 group-hover:text-white/70 transition-colors duration-150">
                     ↗
                   </span>
                 </a>
@@ -133,27 +132,33 @@ export const Contact = () => {
 
       {/* Sim controls — above canvas, pointer-events isolated */}
       <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-        <div className="sim-mode-toggle">
+        <div className="flex rounded-md border border-white/10 bg-white/5 dark:bg-black/30 backdrop-blur-md overflow-hidden">
           <button
             onClick={() => handleModeToggle("conway")}
-            className={simMode === "conway" ? "active" : ""}
+            className={`px-3 py-1 text-xs font-mono text-white/70 hover:text-white/90 transition-colors ${
+              simMode === "conway" ? "bg-white/10 text-white/90" : ""
+            }`}
           >
             Conway
           </button>
           <button
             onClick={() => handleModeToggle("daynight")}
-            className={simMode === "daynight" ? "active" : ""}
+            className={`px-3 py-1 text-xs font-mono text-white/70 hover:text-white/90 transition-colors ${
+              simMode === "daynight" ? "bg-white/10 text-white/90" : ""
+            }`}
           >
             Day &amp; Night
           </button>
         </div>
+
         <button
           onClick={handlePlayPause}
           title={isPaused ? "Play" : "Pause"}
-          className="sim-ctrl-btn"
+          className="w-8 h-8 rounded-md border border-white/10 bg-white/5 dark:bg-black/30 text-white/70 flex items-center justify-center hover:text-white/90 hover:bg-[#1E2337]/70 transition-colors"
         >
           {isPaused ? <Play size={14} /> : <Pause size={14} />}
         </button>
+
         <InfoPopover
           items={[
             [
