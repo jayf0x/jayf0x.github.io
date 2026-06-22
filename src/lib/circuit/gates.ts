@@ -52,17 +52,21 @@ export function srLatch(lx: number, cy: number, gap = 50): SrLatchShape {
   const nandPath = (gy: number) =>
     `M ${lx},${gy - 20} L ${lx},${gy + 20} Q ${lx + 40},${gy + 20} ${lx + 40},${gy} Q ${lx + 40},${gy - 20} ${lx},${gy - 20} Z`;
   const bubR = 5;
-  // Cross-coupling: Q (ty) → bottom gate at by+10; Q̄ (by) → top gate at ty-10
-  // ty-10 and by+10 match the symmetric input pin positions in topology.ts
+
+  // Cross-coupling wires with 45° diagonal routed through [lx+60, cy]:
+  //   Q (ty) → right → down to cy → 45° down-left → bottom gate input (by+10)
+  //   Q̄ (by) → right → up to cy   → 45° up-left   → top gate input  (ty-10)
+  // The diagonal is exactly 45° when gap/2 + 10 = 60 (i.e. gap = 100).
   const cross: [Point, Point, Point, Point][] = [
-    [[lx + 50, ty], [lx + 56, ty], [lx + 56, by + 10], [lx, by + 10]],
-    [[lx + 50, by], [lx + 60, by], [lx + 60, ty - 10], [lx, ty - 10]],
+    [[lx + 50, ty], [lx + 60, ty], [lx + 60, cy], [lx, by + 10]],
+    [[lx + 50, by], [lx + 60, by], [lx + 60, cy], [lx, ty - 10]],
   ];
+
   return {
     top: { path: nandPath(ty), bub: [lx + 45, ty, bubR], cx: lx + 20, cy: ty },
     bot: { path: nandPath(by), bub: [lx + 45, by, bubR], cx: lx + 20, cy: by },
     cross,
-    qOut: [lx + 50, ty],
+    qOut:    [lx + 50, ty],
     qBarOut: [lx + 50, by],
   };
 }

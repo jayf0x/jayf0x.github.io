@@ -228,13 +228,13 @@ export function useDigitalHeartbeat(
       if (cross1Active && cross1Alpha > 0.02) {
         ctx.save();
         ctx.globalAlpha = cross1Alpha;
-        drawComet(ctx, crossPath1, cross1Head, GCOL.latch, 18, 2);
+        drawComet(ctx, crossPath1, cross1Head, C.warm, 18, 2);
         ctx.restore();
       }
       if (cross2Active && cross2Alpha > 0.02) {
         ctx.save();
         ctx.globalAlpha = cross2Alpha;
-        drawComet(ctx, crossPath2, cross2Head, GCOL.latch, 18, 2);
+        drawComet(ctx, crossPath2, cross2Head, C.warm, 18, 2);
         ctx.restore();
       }
 

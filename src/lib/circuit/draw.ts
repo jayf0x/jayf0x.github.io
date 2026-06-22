@@ -3,7 +3,7 @@
 // drawComet and drawFlash are called every animation frame.
 
 import type { Path } from "./types";
-import { C, GCOL, CIRC_CX, CIRC_CY, CIRC_R, tau } from "./config";
+import { C, CIRC_CX, CIRC_CY, CIRC_R, tau } from "./config";
 import { pointAt } from "./path";
 import { NOT, XOR, LATCH, WIRES, SPLITTER_DOTS } from "./topology";
 
@@ -77,9 +77,9 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
     bgx.stroke();
   });
 
-  // Cross-coupling wires — very dim; animated comets carry the visual life
-  bgx.strokeStyle = `rgba(${GCOL.latch},0.15)`;
-  bgx.lineWidth = 1.4;
+  // Cross-coupling wires — same weight as main wires; comets animate on top
+  bgx.strokeStyle = C.ink;
+  bgx.lineWidth = 1.6;
   bgx.lineJoin = "round";
   bgx.lineCap = "round";
   LATCH.cross.forEach((w) => {
