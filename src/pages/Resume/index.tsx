@@ -19,7 +19,7 @@ export const Resume = () => {
       {/* Download button — positioned by hook at circuit circle */}
       <div
         ref={buttonRef}
-        className="absolute pointer-events-auto z-10 top-2/5 left-1/2"
+        className="absolute pointer-events-auto z-10"
         style={{ transform: "translate(-50%, -50%)" }}
       >
         <a

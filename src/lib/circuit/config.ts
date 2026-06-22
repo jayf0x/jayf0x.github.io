@@ -13,6 +13,7 @@ export const C = {
   inkDim: "#46505f",
   warm: "255,184,84",
   teal: "255,124,84",
+  gateBg: "rgba(8, 12, 20, 0.94)",
 } as const;
 
 // Gate glow colors — update 'gate' key label when AND→XOR lands

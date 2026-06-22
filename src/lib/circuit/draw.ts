@@ -12,7 +12,7 @@ import { NOT, XOR, LATCH, WIRES, SPLITTER_DOTS } from "./topology";
 export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.clearRect(0, 0, CIRC_CX * 2, CIRC_CY * 2);
 
-  // Wires: main (ink) vs feedback (inkDim)
+  // Wires: main (ink) vs feedback arcs (inkDim, thinner)
   WIRES.forEach((w, i) => {
     bgx.strokeStyle = i >= 7 ? C.inkDim : C.ink;
     bgx.lineWidth = i >= 7 ? 1 : 1.6;
@@ -29,6 +29,24 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.beginPath();
   bgx.arc(CIRC_CX, CIRC_CY, CIRC_R, 0, tau);
   bgx.stroke();
+
+  // ── gate fills (cover wires passing through gate bodies) ─────────────────
+
+  bgx.fillStyle = C.gateBg;
+
+  // NOT triangle fill
+  bgx.beginPath();
+  NOT.tri.forEach((p, i) => (i ? bgx.lineTo(p[0], p[1]) : bgx.moveTo(p[0], p[1])));
+  bgx.closePath();
+  bgx.fill();
+
+  // XOR body fill
+  bgx.fill(new Path2D(XOR.body));
+
+  // NAND gate fills
+  [LATCH.top, LATCH.bot].forEach((g) => bgx.fill(new Path2D(g.path)));
+
+  // ── gate outlines ─────────────────────────────────────────────────────────
 
   // NOT gate: triangle + bubble
   bgx.strokeStyle = C.ink;
@@ -49,7 +67,7 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.setLineDash([]);
   bgx.stroke(new Path2D(XOR.body));
 
-  // SR NAND latch — two gate bodies + bubbles
+  // SR NAND latch — two gate bodies + output bubbles
   bgx.strokeStyle = C.ink;
   bgx.lineWidth = 1.6;
   [LATCH.top, LATCH.bot].forEach((g) => {
@@ -59,8 +77,8 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
     bgx.stroke();
   });
 
-  // Cross-coupling wires (teal)
-  bgx.strokeStyle = `rgba(${GCOL.latch},0.65)`;
+  // Cross-coupling wires — very dim; animated comets carry the visual life
+  bgx.strokeStyle = `rgba(${GCOL.latch},0.15)`;
   bgx.lineWidth = 1.4;
   bgx.lineJoin = "round";
   bgx.lineCap = "round";
