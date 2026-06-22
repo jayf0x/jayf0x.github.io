@@ -1,18 +1,21 @@
 import { RESUME_DOWNLOAD_URL } from "@/config";
+import { useIsMobile } from "@/hooks/useDevice";
 import { useDigitalHeartbeat } from "@/lib/circuit";
 import { FileHeart } from "lucide-react";
 import { useRef } from "react";
 
 export const Resume = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
   const buttonRef = useRef<HTMLAnchorElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useDigitalHeartbeat(containerRef, buttonRef as React.RefObject<HTMLElement>);
 
   return (
     <div ref={containerRef} className="size-full relative overflow-hidden">
       <div
-        className="absolute pointer-events-auto z-10 top-2/5 left-1/2"
+        className={`absolute pointer-events-auto z-10 left-1/2 ${isMobile ? "top-2/5" : "top-1/2"}`}
         style={{ transform: "translate(-50%, -50%)" }}
       >
         <a
