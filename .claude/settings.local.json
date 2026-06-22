@@ -7,7 +7,8 @@
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "Bash(curl -s http://localhost:5173/)",
       "Bash(curl -s \"http://localhost:5173/src/pages/Info/index.tsx\")",
-      "Bash(/Users/me/.bun/bin/bun run *)"
+      "Bash(/Users/me/.bun/bin/bun run *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
