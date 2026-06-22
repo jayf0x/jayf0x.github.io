@@ -57,29 +57,19 @@ export const Resume = () => {
       {/* "download cv" label — positioned below the circle by hook */}
       <p
         ref={labelRef}
-        className="absolute pointer-events-none z-10 font-mono text-[9px] uppercase tracking-[0.22em] text-(--muted)/40 whitespace-nowrap select-none"
+        className="absolute pointer-events-none z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-white/55 whitespace-nowrap select-none"
         style={{ transform: "translateX(-50%)" }}
       >
         download cv
       </p>
 
-      {/* Quote + section labels */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 px-6 pb-5 pointer-events-none select-none">
-        <div className="flex justify-between mb-1.5">
-          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-(--muted)/25">
-            To be, or not to be
-          </span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-(--muted)/25">
-            And so it is
-          </span>
-        </div>
-        <p className="text-center font-mono text-[11px] text-(--muted)/20 italic leading-relaxed">
-          "The question becomes a beat — the beat becomes memory — and memory asks again."
-        </p>
-      </div>
+      {/* Quote — above circuit, centered */}
+      <p className="absolute top-3 left-1/2 -translate-x-1/2 z-10 font-mono text-[13px] text-white/65 italic whitespace-nowrap select-none pointer-events-none">
+        "The question becomes a beat — the beat becomes memory — and memory asks again."
+      </p>
 
-      {/* Sim controls */}
-      <div className="absolute bottom-4 right-4 flex items-center gap-2 z-20 pointer-events-auto">
+      {/* Sim controls — bottom left */}
+      <div className="absolute bottom-4 left-4 flex items-center gap-2 z-20 pointer-events-auto">
         <button onClick={handlePlayPause} title={isPaused ? "Play" : "Pause"} className="sim-ctrl-btn">
           {isPaused ? <Play size={14} /> : <Pause size={14} />}
         </button>

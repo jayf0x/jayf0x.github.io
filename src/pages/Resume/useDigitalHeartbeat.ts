@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
-const DESIGN_W = 1100;
-const DESIGN_H = 560;
+const DESIGN_W = 750;
+const DESIGN_H = 520;
 const BASE = 360;
 
-// Circle where the split lives — download button goes here
+// Circle at the split — download button lives here
 const CIRC_CX = 490;
 const CIRC_CY = 260;
 const CIRC_R = 60;
@@ -15,7 +15,13 @@ const C = {
   inkDim: "#46505f",
   warm: "255,184,84",
   teal: "52,225,196",
-  tealHex: "#34e1c4",
+} as const;
+
+// Per gate-type glow colors
+const GCOL = {
+  not: "180,100,255",  // violet
+  and: "255,184,84",   // warm — same as comet, AND is the "decision"
+  nor: "52,225,196",   // teal — NOR = memory
 } as const;
 
 type Point = [number, number];
@@ -68,7 +74,6 @@ function pointAt(p: Path, d: number): Point {
   return [L.b[0], L.b[1]];
 }
 
-// Semicircle as polyline — top arc goes above, bottom arc goes below
 function arcPts(top: boolean, steps = 20): Point[] {
   const pts: Point[] = [];
   for (let i = 0; i <= steps; i++) {
@@ -98,45 +103,37 @@ export function useDigitalHeartbeat(
     const container = containerRef.current;
     if (!container) return;
 
-    // Gates
     const NOT = notGate(240, 290);
     const AND = andGate(360, 260);
     const N1 = norGate(560, 210);
     const N2 = norGate(560, 310);
 
-    // Static wires — feedback outer loops use ink (not dim) to reinforce memory
+    // Convergence point: both feedback loops meet at left before splitting into AND's two inputs.
+    const CONV: Point = [90, 260];
+
     const WIRES: Point[][] = [
-      [[150, 260], [210, 260]],
-      [[210, 260], [210, 290], [240, 290]],
-      [[284, 290], [330, 290], [330, 270], [360, 270]],
-      [[210, 260], [210, 250], [360, 250]],
-      [[404, 260], [CIRC_CX - CIRC_R, CIRC_CY]],
-      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 210], [560, 210]],
-      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 310], [560, 310]],
-      [[618, 210], [700, 210], [700, 90], [150, 90], [150, 260]],   // Q feedback — full ink
-      [[618, 310], [700, 310], [700, 430], [150, 430], [150, 260]], // Q' feedback — full ink
-      [[618, 210], [560, 301]],  // cross-couple straight diagonals (cleaner X)
-      [[618, 310], [560, 219]],
+      [CONV, [90, 250], [360, 250]],              // Q top feedback → AND upper (direct)
+      [CONV, [90, 290], [210, 290], [240, 290]],  // Q' bottom → NOT gate input
+      [[284, 290], [330, 290], [330, 270], [360, 270]], // NOT output → AND lower
+      [[404, 260], [CIRC_CX - CIRC_R, CIRC_CY]], // AND output → circle
+      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 210], [560, 210]], // circle → N1
+      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 310], [560, 310]], // circle → N2
+      [[618, 210], [660, 210], [660, 110], [90, 110], CONV],  // Q top feedback loop
+      [[618, 310], [660, 310], [660, 410], [90, 410], CONV],  // Q' bottom feedback loop
+      [[618, 210], [560, 301]], // cross-couple
+      [[618, 310], [560, 219]], // cross-couple
     ];
 
-    // Memory hold paths (glow targets)
-    const HOLD_HI: Point[] = [[618, 210], [700, 210], [700, 90], [150, 90], [150, 260]];
-    const HOLD_LO: Point[] = [[618, 310], [700, 310], [700, 430], [150, 430], [150, 260]];
-    const X_HI: Point[] = [[618, 210], [560, 301]];
-    const X_LO: Point[] = [[618, 310], [560, 219]];
-    const pXHI = buildPath(X_HI);
-    const pXLO = buildPath(X_LO);
-
-    // Loop paths — PRE shared, arcs diverge at circle
+    // Comet follows bottom path (via NOT) into AND, then diverges at circle
     const PRE: Point[] = [
-      [150, 260], [210, 260], [210, 290], [240, 290],
+      CONV, [90, 290], [210, 290], [240, 290],
       [284, 290], [330, 290], [330, 270], [360, 270],
       [404, 260], [CIRC_CX - CIRC_R, CIRC_CY],
     ];
     const topArc = arcPts(true);
     const botArc = arcPts(false);
-    const SUF_HI: Point[] = [[550, 210], [560, 210], [618, 210], [700, 210], [700, 90], [150, 90], [150, 260]];
-    const SUF_LO: Point[] = [[550, 310], [560, 310], [618, 310], [700, 310], [700, 430], [150, 430], [150, 260]];
+    const SUF_HI: Point[] = [[550, 210], [560, 210], [618, 210], [660, 210], [660, 110], [90, 110], CONV];
+    const SUF_LO: Point[] = [[550, 310], [560, 310], [618, 310], [660, 310], [660, 410], [90, 410], CONV];
 
     const loopHi = buildPath([...PRE, ...topArc.slice(1), ...SUF_HI]);
     const loopLo = buildPath([...PRE, ...botArc.slice(1), ...SUF_LO]);
@@ -154,9 +151,8 @@ export function useDigitalHeartbeat(
       bgx.setTransform(DPR, 0, 0, DPR, 0, 0);
       bgx.clearRect(0, 0, DESIGN_W, DESIGN_H);
 
-      // Wires: feedback loops (7, 8) stay at full ink — they ARE the memory structure
       WIRES.forEach((w, i) => {
-        bgx.strokeStyle = i >= 9 ? C.inkDim : C.ink; // cross-couples slightly dimmer
+        bgx.strokeStyle = i >= 8 ? C.inkDim : C.ink;
         bgx.lineWidth = 1.6;
         bgx.lineJoin = "round";
         bgx.lineCap = "round";
@@ -165,14 +161,14 @@ export function useDigitalHeartbeat(
         bgx.stroke();
       });
 
-      // Circle — the split / decision point
+      // Circle at the split
       bgx.strokeStyle = C.ink;
       bgx.lineWidth = 1.6;
       bgx.beginPath();
       bgx.arc(CIRC_CX, CIRC_CY, CIRC_R, 0, tau);
       bgx.stroke();
 
-      // Gates — outlines only (wires terminate at boundaries, no fill needed)
+      // Gate outlines only (no fill)
       bgx.strokeStyle = C.ink;
       bgx.lineWidth = 2.5;
       bgx.beginPath();
@@ -193,12 +189,10 @@ export function useDigitalHeartbeat(
       });
 
       // Junction dots
-      ([
-        [150, 260], [210, 260], [CIRC_CX + CIRC_R, CIRC_CY],
-      ] as Point[]).forEach(([x, y]) => {
+      ([CONV, [CIRC_CX + CIRC_R, CIRC_CY]] as Point[]).forEach(([x, y]) => {
         bgx.fillStyle = C.ink;
         bgx.beginPath();
-        bgx.arc(x, y, 2.8, 0, tau);
+        bgx.arc(x, y, 3, 0, tau);
         bgx.fill();
       });
     }
@@ -212,23 +206,35 @@ export function useDigitalHeartbeat(
     let head = 0;
     let q = 0;
     let bitPop = 0;
-    let shimmer = 0;
     let last = 0;
     let scale = 1;
     let ox = 0;
     let oy = 0;
+    let mobMode = false;
+    let mobTx = 0;
+    let mobTy = 0;
     let rafId = 0;
+
+    // Content bounding box in design space (excludes dead margin)
+    const CCX = (90 + 660) / 2; // 375 — horizontal center of circuit content
+    const CCY = 260;             // vertical center = CIRC_CY (feedback loops are symmetric)
+    // Reserved screen space for quote (top) and controls (bottom)
+    const QUOTE_H = 52;
+    const CTRL_H = 52;
 
     resetRef.current = () => { head = 0; q = 0; bitPop = 0; };
 
     function positionOverlays() {
+      // Button screen coords computed from its design position + current transform
+      const btnX = mobMode ? CIRC_CY * scale + mobTx : CIRC_CX * scale + ox;
+      const btnY = mobMode ? -CIRC_CX * scale + mobTy : CIRC_CY * scale + oy;
       if (buttonRef?.current) {
-        buttonRef.current.style.left = `${CIRC_CX * scale + ox}px`;
-        buttonRef.current.style.top = `${CIRC_CY * scale + oy}px`;
+        buttonRef.current.style.left = `${btnX}px`;
+        buttonRef.current.style.top = `${btnY}px`;
       }
       if (labelRef?.current) {
-        labelRef.current.style.left = `${CIRC_CX * scale + ox}px`;
-        labelRef.current.style.top = `${(CIRC_CY + CIRC_R + 14) * scale + oy}px`;
+        labelRef.current.style.left = `${btnX}px`;
+        labelRef.current.style.top = `${btnY + CIRC_R * scale + 14}px`;
       }
     }
 
@@ -236,9 +242,18 @@ export function useDigitalHeartbeat(
       const DPR = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(w * DPR);
       canvas.height = Math.round(h * DPR);
-      scale = Math.min(w / DESIGN_W, h / DESIGN_H) * 0.97;
-      ox = (w - DESIGN_W * scale) / 2;
-      oy = (h - DESIGN_H * scale) / 2;
+      const avail = h - QUOTE_H - CTRL_H;
+      // ponytail: portrait = rotate circuit 90° CW so wide circuit fits tall screen
+      mobMode = w < h;
+      scale = mobMode
+        ? Math.min(avail / DESIGN_W, w / DESIGN_H) * 0.95
+        : Math.min(w / DESIGN_W, avail / DESIGN_H) * 0.95;
+      // Center on content midpoint — prevents left clipping (CIRC_CX≠CCX)
+      ox = w / 2 - CCX * scale;
+      oy = QUOTE_H + avail / 2 - CCY * scale;
+      // 90° CW mobile: design(x,y) → screen(y·scale + mobTx, -x·scale + mobTy)
+      mobTx = w / 2 - CCY * scale;
+      mobTy = QUOTE_H + avail / 2 + CCX * scale;
       positionOverlays();
     }
 
@@ -266,83 +281,70 @@ export function useDigitalHeartbeat(
       for (let i = 18; i >= 1; i--) {
         const f = i / 18;
         const [x, y] = pointAt(path, h - len * f);
-        ctx.fillStyle = `rgba(${col},${(1 - f) * 0.85})`;
+        ctx.fillStyle = `rgba(${col},${(1 - f) * 0.7})`;
         ctx.beginPath();
-        ctx.arc(x, y, (1 - f) * 2.6 + 0.5, 0, tau);
+        ctx.arc(x, y, (1 - f) * 2.4 + 0.4, 0, tau);
         ctx.fill();
       }
       const [hx, hy] = pointAt(path, h);
       ctx.save();
       ctx.shadowColor = `rgb(${col})`;
-      ctx.shadowBlur = 24;
+      ctx.shadowBlur = 8;
       ctx.fillStyle = `rgb(${col})`;
       ctx.beginPath();
       ctx.arc(hx, hy, r, 0, tau);
       ctx.fill();
-      ctx.shadowBlur = 32;
-      ctx.beginPath();
-      ctx.arc(hx, hy, r * 0.5, 0, tau);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    function glow(pts: Point[], col: string, w: number, alpha: number) {
-      ctx.save();
-      ctx.strokeStyle = `rgba(${col},${alpha})`;
-      ctx.lineWidth = w;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
-      ctx.shadowColor = `rgb(${col})`;
-      ctx.shadowBlur = 16;
-      ctx.beginPath();
-      pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
-      ctx.stroke();
       ctx.restore();
     }
 
     function flash(cx: number, cy: number, intensity: number, col: string) {
       if (intensity <= 0) return;
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 38);
-      g.addColorStop(0, `rgba(${col},${intensity * 0.9})`);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30);
+      g.addColorStop(0, `rgba(${col},${intensity * 0.55})`);
       g.addColorStop(1, `rgba(${col},0)`);
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(cx, cy, 38, 0, tau);
+      ctx.arc(cx, cy, 30, 0, tau);
       ctx.fill();
     }
 
     function frame(now: number) {
       const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
       last = now;
-
-      if (playingRef.current) {
-        step(dt);
-        shimmer += dt * speedRef.current;
-      }
+      if (playingRef.current) step(dt);
 
       const DPR = Math.min(window.devicePixelRatio || 1, 2);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.setTransform(scale * DPR, 0, 0, scale * DPR, ox * DPR, oy * DPR);
+      if (mobMode) {
+        ctx.setTransform(0, -scale * DPR, scale * DPR, 0, mobTx * DPR, mobTy * DPR);
+      } else {
+        ctx.setTransform(scale * DPR, 0, 0, scale * DPR, ox * DPR, oy * DPR);
+      }
       ctx.drawImage(bg, 0, 0, DESIGN_W, DESIGN_H);
 
-      // Memory: held side glows teal + cross-couple shimmer
-      const [holdPath, pX] = q ? [HOLD_HI, pXHI] : [HOLD_LO, pXLO];
-      const xPath = q ? X_HI : X_LO;
-      glow(holdPath, C.teal, 4, 0.9);
-      glow(xPath, C.teal, 3, 0.65);
-      comet(pX, (shimmer * 60) % pX.total, C.teal, 26, 2);
+      // Stored energy — both NOR outputs visible; active = bright + glow, inactive = ghost
+      [[618, 210, q === 1], [618, 310, q === 0]].forEach(([x, y, activeVal]) => {
+        const active = activeVal as boolean;
+        ctx.save();
+        ctx.shadowColor = `rgb(${C.teal})`;
+        ctx.shadowBlur = active ? 14 : 4;
+        ctx.fillStyle = `rgba(${C.teal},${active ? 1 : 0.22})`;
+        ctx.beginPath();
+        ctx.arc(x as number, y as number, active ? 5 + bitPop * 2 : 3, 0, tau);
+        ctx.fill();
+        ctx.restore();
+      });
 
-      // Travelling spark (warm) — flashes gates as it passes
-      const path = q ? loopHi : loopLo;
-      const headPt = pointAt(path, head);
-      flash(AND.cx, AND.cy, near(headPt, AND.cx, AND.cy, 44), C.warm);
-      flash(NOT.cx, NOT.cy, near(headPt, NOT.cx, NOT.cy, 36), C.warm);
-      flash(N1.cx, N1.cy, near(headPt, N1.cx, N1.cy, 44), C.warm);
-      flash(N2.cx, N2.cy, near(headPt, N2.cx, N2.cy, 44), C.warm);
-      flash(150, 260, near(headPt, 150, 260, 32) * 0.7, C.warm);
-      flash(CIRC_CX, CIRC_CY, near(headPt, CIRC_CX, CIRC_CY, CIRC_R + 12) * 0.5, C.warm);
-      comet(path, head, C.warm, 54, 4.2);
+      // Per-gate glow — each gate type has its own color
+      const headPt = pointAt(q ? loopHi : loopLo, head);
+      flash(NOT.cx, NOT.cy, near(headPt, NOT.cx, NOT.cy, 38), GCOL.not);
+      flash(AND.cx, AND.cy, near(headPt, AND.cx, AND.cy, 42), GCOL.and);
+      flash(N1.cx, N1.cy, near(headPt, N1.cx, N1.cy, 42), GCOL.nor);
+      flash(N2.cx, N2.cy, near(headPt, N2.cx, N2.cy, 42), GCOL.nor);
+
+      // Travelling spark
+      comet(q ? loopHi : loopLo, head, C.warm, 54, 4);
 
       rafId = requestAnimationFrame(frame);
     }
