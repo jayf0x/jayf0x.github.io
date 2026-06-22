@@ -1,13 +1,24 @@
 import type { RefObject } from "react";
 import { useEffect } from "react";
-import { DESIGN_W, DESIGN_H, BASE, CIRC_CX, CIRC_CY, CIRC_R, C, GCOL, tau } from "./config";
+import {
+  BASE,
+  C,
+  CIRC_CX,
+  CIRC_CY,
+  CIRC_R,
+  DESIGN_H,
+  DESIGN_W,
+  GCOL,
+  tau,
+} from "./config";
+import { drawComet, drawFlash, renderStatic } from "./draw";
 import { pointAt } from "./path";
-import { XOR, LATCH, loopHi, dLATCH_TRIGGER } from "./topology";
-import { renderStatic, drawComet, drawFlash } from "./draw";
+import { dLATCH_TRIGGER, LATCH, loopHi, XOR } from "./topology";
 
-// Center of the new composition: x spans 360–660, y spans 110–410
-const CCX = (360 + 660) / 2; // 510
-const CCY = 260;
+// Note: composition center was previously computed here.
+// We align the rendering to the circuit circle (`CIRC_CX`, `CIRC_CY`) so
+// the UI button can remain centered while the diagram is positioned
+// around it.
 
 export function useDigitalHeartbeat(
   containerRef: RefObject<HTMLDivElement | null>,
@@ -33,7 +44,8 @@ export function useDigitalHeartbeat(
 
     // ── main canvas ───────────────────────────────────────────────────────
     const canvas = document.createElement("canvas");
-    canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
+    canvas.style.cssText =
+      "position:absolute;inset:0;width:100%;height:100%;display:block;";
     container.appendChild(canvas);
     const ctx = canvas.getContext("2d")!;
 
@@ -44,21 +56,17 @@ export function useDigitalHeartbeat(
     let rafId = 0;
 
     // ── responsive layout ─────────────────────────────────────────────────
-    let scale = 1, ox = 0, oy = 0;
-    let mobMode = false, mobTx = 0, mobTy = 0;
+    let scale = 1,
+      ox = 0,
+      oy = 0;
+    let mobMode = false,
+      mobTx = 0,
+      mobTy = 0;
 
-    function positionOverlays() {
-      const btnX = mobMode ? CIRC_CY * scale + mobTx : CIRC_CX * scale + ox;
-      const btnY = mobMode ? -CIRC_CX * scale + mobTy : CIRC_CY * scale + oy;
-      if (buttonRef?.current) {
-        buttonRef.current.style.left = `${btnX}px`;
-        buttonRef.current.style.top = `${btnY}px`;
-      }
-      if (labelRef?.current) {
-        labelRef.current.style.left = `${btnX}px`;
-        labelRef.current.style.top = `${btnY + CIRC_R * scale + 14}px`;
-      }
-    }
+    // Overlay positioning is handled by reading the button's DOM
+    // position and using that as the diagram origin. This keeps the
+    // button statically positioned (e.g. centered via CSS) and moves
+    // the canvas drawing around it.
 
     function resize(w: number, h: number) {
       const DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -68,11 +76,32 @@ export function useDigitalHeartbeat(
       scale = mobMode
         ? Math.min(h / DESIGN_W, w / DESIGN_H) * 0.95
         : Math.min(w / DESIGN_W, h / DESIGN_H) * 0.95;
-      ox = w / 2 - CCX * scale;
-      oy = h / 2 - CCY * scale;
-      mobTx = w / 2 - CCY * scale;
-      mobTy = h / 2 + CCX * scale;
-      positionOverlays();
+      // Determine the target screen position (in CSS pixels) that the
+      // diagram's circuit center should align to. Prefer the actual
+      // button DOM center when available, otherwise fall back to the
+      // container center.
+      let targetX = w / 2;
+      let targetY = h / 2;
+      if (buttonRef?.current) {
+        const btnRect = buttonRef.current.getBoundingClientRect();
+        const contRect = container!.getBoundingClientRect();
+        targetX = btnRect.left - contRect.left + btnRect.width / 2;
+        targetY = btnRect.top - contRect.top + btnRect.height / 2;
+      }
+
+      // Map the diagram so that (CIRC_CX, CIRC_CY) lands at (targetX, targetY)
+      ox = targetX - CIRC_CX * scale;
+      oy = targetY - CIRC_CY * scale;
+      // For the rotated mobile transform, pick mobTx/mobTy so the same
+      // mapping holds when the canvas transform swaps axes.
+      mobTx = targetX - CIRC_CY * scale;
+      mobTy = targetY + CIRC_CX * scale;
+
+      // Position the label below the button (button itself is left alone).
+      if (labelRef?.current) {
+        labelRef.current.style.left = `${targetX}px`;
+        labelRef.current.style.top = `${targetY + CIRC_R * scale + 14}px`;
+      }
     }
 
     // ── animation helpers ─────────────────────────────────────────────────
@@ -109,7 +138,14 @@ export function useDigitalHeartbeat(
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (mobMode) {
-        ctx.setTransform(0, -scale * DPR, scale * DPR, 0, mobTx * DPR, mobTy * DPR);
+        ctx.setTransform(
+          0,
+          -scale * DPR,
+          scale * DPR,
+          0,
+          mobTx * DPR,
+          mobTy * DPR,
+        );
       } else {
         ctx.setTransform(scale * DPR, 0, 0, scale * DPR, ox * DPR, oy * DPR);
       }
@@ -129,12 +165,17 @@ export function useDigitalHeartbeat(
 
       // Latch bubbles: Q glows on beat arrival, Q̅ stays dim
       [
-        { x: LATCH.top.bub[0], y: LATCH.top.bub[1], pop: bitPop_1, primary: true  },
-        { x: LATCH.bot.bub[0], y: LATCH.bot.bub[1], pop: 0,        primary: false },
+        {
+          x: LATCH.top.bub[0],
+          y: LATCH.top.bub[1],
+          pop: bitPop_1,
+          primary: true,
+        },
+        { x: LATCH.bot.bub[0], y: LATCH.bot.bub[1], pop: 0, primary: false },
       ].forEach(({ x, y, pop, primary }) => {
-        const alpha  = pop > 0 ? 1    : primary ? 0.55 : 0.18;
+        const alpha = pop > 0 ? 1 : primary ? 0.55 : 0.18;
         const radius = pop > 0 ? 5 + pop * 2 : primary ? 4 : 2.5;
-        const blur   = pop > 0 ? 14   : primary ? 8    : 2;
+        const blur = pop > 0 ? 14 : primary ? 8 : 2;
         ctx.save();
         ctx.shadowColor = `rgb(${GCOL.latch})`;
         ctx.shadowBlur = blur;
@@ -147,8 +188,8 @@ export function useDigitalHeartbeat(
 
       // Main comet — color shifts teal at latch, warm-amber at XOR, warm elsewhere
       const headPtA = pointAt(loopHi, headA);
-      const wGateA  = near(headPtA, XOR.cx, XOR.cy, 42);
-      const wN1A    = near(headPtA, LATCH.top.cx, LATCH.top.cy, 42);
+      const wGateA = near(headPtA, XOR.cx, XOR.cy, 42);
+      const wN1A = near(headPtA, LATCH.top.cx, LATCH.top.cy, 42);
 
       drawFlash(ctx, XOR.cx, XOR.cy, wGateA, GCOL.gate);
       drawFlash(ctx, LATCH.top.cx, LATCH.top.cy, wN1A, GCOL.latch);

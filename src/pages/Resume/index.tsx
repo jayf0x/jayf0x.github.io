@@ -2,7 +2,7 @@ import { RESUME_DOWNLOAD_URL } from "@/config";
 import { useDigitalHeartbeat } from "@/lib/circuit";
 import { FileHeart } from "lucide-react";
 import { useRef } from "react";
-import "./styles.css";
+// styles moved into Tailwind + inline styles below
 
 export const Resume = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,7 +19,7 @@ export const Resume = () => {
       {/* Download button — positioned by hook at circuit circle */}
       <div
         ref={buttonRef}
-        className="absolute pointer-events-auto z-10"
+        className="absolute pointer-events-auto z-10 top-1/2 left-1/2"
         style={{ transform: "translate(-50%, -50%)" }}
       >
         <a
@@ -29,8 +29,15 @@ export const Resume = () => {
           aria-label="Download resume"
         >
           <div
-            id="red-button"
             title="Doubt everything. Find your own light. - Buddha"
+            style={{
+              background:
+                "radial-gradient(circle at 36% 32%, var(--c-ff9090) 0%, var(--c-e00000) 48%, var(--c-7a0000) 100%)",
+              boxShadow:
+                "0 0 28px var(--c-ff3737-a65), 0 8px 24px var(--bg-a60), inset 0 3px 7px var(--c-ffbebe-a45), inset 0 -3px 5px var(--bg-a45)",
+              transition: "transform 0.12s ease, box-shadow 0.12s ease",
+            }}
+            className="hover:scale-[1.1] active:scale-[0.91] size-20 rounded-full flex justify-center items-center"
           >
             <FileHeart size={32} className="opacity-60" />
           </div>
