@@ -23,9 +23,9 @@ export const COLS = {
   circLeft:   430 / DESIGN_W,  // orbit circle left tangent  (CIRC_CX − CIRC_R)
   circ:       490 / DESIGN_W,  // orbit circle center        (CIRC_CX)
   circRight:  550 / DESIGN_W,  // orbit circle right tangent (CIRC_CX + CIRC_R) = SPLIT2
-  latchLeft:  590 / DESIGN_W,  // SR latch left edge
-  latchOut:   640 / DESIGN_W,  // SR latch output pins       (latchLeft + 50px)
-  feedRight:  660 / DESIGN_W,  // right edge of feedback arcs
+  latchLeft:  720 / DESIGN_W,  // SR latch left edge — pushed right so right span (400px) matches left
+  latchOut:   770 / DESIGN_W,  // SR latch output pins       (latchLeft + 50px)
+  feedRight:  890 / DESIGN_W,  // right edge of feedback arcs — symmetric: 400px from CIRC_CX
 } as const;
 
 // ─── rows (y-axis) ───────────────────────────────────────────────────────────

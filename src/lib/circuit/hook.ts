@@ -136,8 +136,8 @@ export function useDigitalHeartbeat(
       }
 
       // Clamp scale so the full diagram fits around the button.
-      // Diagram extends 400px left, 170px right, 150px above/below from CIRC_CX/CY.
-      const fitH = Math.min(targetX / (CIRC_CX - 90), (w - targetX) / (660 - CIRC_CX));
+      // Diagram extends 400px left, 400px right (symmetric), 150px above/below from CIRC_CX/CY.
+      const fitH = Math.min(targetX / (CIRC_CX - 90), (w - targetX) / (890 - CIRC_CX));
       const fitV = Math.min(targetY / (CIRC_CY - 110), (h - targetY) / (410 - CIRC_CY));
       scale = Math.min(scale, fitH, fitV);
 

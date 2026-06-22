@@ -1,6 +1,6 @@
 // Logical design-space size. The canvas is scaled to fit the container;
 // all coordinates in this codebase are in these units.
-export const DESIGN_W = 750;
+export const DESIGN_W = 980;
 export const DESIGN_H = 520;
 
 // Comet travel speed in design-space pixels per second.
