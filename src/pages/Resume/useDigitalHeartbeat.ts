@@ -4,7 +4,8 @@ import type { RefObject } from "react";
 const DESIGN_W = 1100;
 const DESIGN_H = 560;
 const BASE = 360;
-// Circle where the split lives — button goes here
+
+// Circle where the split lives — download button goes here
 const CIRC_CX = 490;
 const CIRC_CY = 260;
 const CIRC_R = 60;
@@ -67,7 +68,7 @@ function pointAt(p: Path, d: number): Point {
   return [L.b[0], L.b[1]];
 }
 
-// Semicircle as polyline — top goes over, bottom goes under
+// Semicircle as polyline — top arc goes above, bottom arc goes below
 function arcPts(top: boolean, steps = 20): Point[] {
   const pts: Point[] = [];
   for (let i = 0; i <= steps; i++) {
@@ -87,6 +88,7 @@ export type HeartbeatControls = {
 export function useDigitalHeartbeat(
   containerRef: RefObject<HTMLDivElement | null>,
   buttonRef?: RefObject<HTMLElement | null>,
+  labelRef?: RefObject<HTMLElement | null>,
 ): HeartbeatControls {
   const playingRef = useRef(true);
   const speedRef = useRef(1);
@@ -102,30 +104,30 @@ export function useDigitalHeartbeat(
     const N1 = norGate(560, 210);
     const N2 = norGate(560, 310);
 
-    // Static skeleton wires
+    // Static wires — feedback outer loops use ink (not dim) to reinforce memory
     const WIRES: Point[][] = [
       [[150, 260], [210, 260]],
       [[210, 260], [210, 290], [240, 290]],
       [[284, 290], [330, 290], [330, 270], [360, 270]],
       [[210, 260], [210, 250], [360, 250]],
-      [[404, 260], [CIRC_CX - CIRC_R, CIRC_CY]],               // AND out → circle entry
-      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 210], [560, 210]],   // circle exit → top NOR
-      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 310], [560, 310]],   // circle exit → bottom NOR
-      [[618, 210], [700, 210], [700, 90], [150, 90], [150, 260]],
-      [[618, 310], [700, 310], [700, 430], [150, 430], [150, 260]],
-      [[618, 210], [596, 250], [560, 301]],
-      [[618, 310], [596, 270], [560, 219]],
+      [[404, 260], [CIRC_CX - CIRC_R, CIRC_CY]],
+      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 210], [560, 210]],
+      [[CIRC_CX + CIRC_R, CIRC_CY], [550, 310], [560, 310]],
+      [[618, 210], [700, 210], [700, 90], [150, 90], [150, 260]],   // Q feedback — full ink
+      [[618, 310], [700, 310], [700, 430], [150, 430], [150, 260]], // Q' feedback — full ink
+      [[618, 210], [560, 301]],  // cross-couple straight diagonals (cleaner X)
+      [[618, 310], [560, 219]],
     ];
 
-    // Cross-couple shimmer paths
-    const X_HI: Point[] = [[618, 210], [596, 250], [560, 301]];
-    const X_LO: Point[] = [[618, 310], [596, 270], [560, 219]];
+    // Memory hold paths (glow targets)
     const HOLD_HI: Point[] = [[618, 210], [700, 210], [700, 90], [150, 90], [150, 260]];
     const HOLD_LO: Point[] = [[618, 310], [700, 310], [700, 430], [150, 430], [150, 260]];
+    const X_HI: Point[] = [[618, 210], [560, 301]];
+    const X_LO: Point[] = [[618, 310], [560, 219]];
     const pXHI = buildPath(X_HI);
     const pXLO = buildPath(X_LO);
 
-    // Loop paths — PRE is shared, then arcs diverge
+    // Loop paths — PRE shared, arcs diverge at circle
     const PRE: Point[] = [
       [150, 260], [210, 260], [210, 290], [240, 290],
       [284, 290], [330, 290], [330, 270], [360, 270],
@@ -136,12 +138,11 @@ export function useDigitalHeartbeat(
     const SUF_HI: Point[] = [[550, 210], [560, 210], [618, 210], [700, 210], [700, 90], [150, 90], [150, 260]];
     const SUF_LO: Point[] = [[550, 310], [560, 310], [618, 310], [700, 310], [700, 430], [150, 430], [150, 260]];
 
-    // topArc[0] = PRE last point, topArc last = (cx+r, cy), SUF starts there
     const loopHi = buildPath([...PRE, ...topArc.slice(1), ...SUF_HI]);
     const loopLo = buildPath([...PRE, ...botArc.slice(1), ...SUF_LO]);
-    const dTrig = buildPath(PRE).total; // flip point = circle entry
+    const dTrig = buildPath(PRE).total;
 
-    // ── Static offscreen layer ───────────────────────────────────────────
+    // ── Static offscreen layer ────────────────────────────────────────────
     const bg = document.createElement("canvas");
     const bgx = bg.getContext("2d")!;
     const tau = Math.PI * 2;
@@ -152,11 +153,10 @@ export function useDigitalHeartbeat(
       bg.height = DESIGN_H * DPR;
       bgx.setTransform(DPR, 0, 0, DPR, 0, 0);
       bgx.clearRect(0, 0, DESIGN_W, DESIGN_H);
-      // ponytail: no bg gradient — let the app panel show through
 
-      // Wires
+      // Wires: feedback loops (7, 8) stay at full ink — they ARE the memory structure
       WIRES.forEach((w, i) => {
-        bgx.strokeStyle = i >= 7 ? C.inkDim : C.ink;
+        bgx.strokeStyle = i >= 9 ? C.inkDim : C.ink; // cross-couples slightly dimmer
         bgx.lineWidth = 1.6;
         bgx.lineJoin = "round";
         bgx.lineCap = "round";
@@ -165,16 +165,16 @@ export function useDigitalHeartbeat(
         bgx.stroke();
       });
 
-      // Circle (the split lives here)
+      // Circle — the split / decision point
       bgx.strokeStyle = C.ink;
       bgx.lineWidth = 1.6;
       bgx.beginPath();
       bgx.arc(CIRC_CX, CIRC_CY, CIRC_R, 0, tau);
       bgx.stroke();
 
-      // NOT gate — outline only, no fill (wires terminate at gate boundary)
+      // Gates — outlines only (wires terminate at boundaries, no fill needed)
       bgx.strokeStyle = C.ink;
-      bgx.lineWidth = 2;
+      bgx.lineWidth = 2.5;
       bgx.beginPath();
       NOT.tri.forEach((p, i) => (i ? bgx.lineTo(p[0], p[1]) : bgx.moveTo(p[0], p[1])));
       bgx.closePath();
@@ -183,14 +183,10 @@ export function useDigitalHeartbeat(
       bgx.arc(NOT.bub[0], NOT.bub[1], NOT.bub[2], 0, tau);
       bgx.stroke();
 
-      // AND gate — outline only
-      const andP = new Path2D(AND.path);
-      bgx.stroke(andP);
+      bgx.stroke(new Path2D(AND.path));
 
-      // NOR gates — outline + bubble
       [N1, N2].forEach((g) => {
-        const p = new Path2D(g.path);
-        bgx.stroke(p);
+        bgx.stroke(new Path2D(g.path));
         bgx.beginPath();
         bgx.arc(g.bub[0], g.bub[1], g.bub[2], 0, tau);
         bgx.stroke();
@@ -213,7 +209,6 @@ export function useDigitalHeartbeat(
     container.appendChild(canvas);
     const ctx = canvas.getContext("2d")!;
 
-    // Animation state
     let head = 0;
     let q = 0;
     let bitPop = 0;
@@ -226,17 +221,25 @@ export function useDigitalHeartbeat(
 
     resetRef.current = () => { head = 0; q = 0; bitPop = 0; };
 
-    function resize(w: number, h: number) {
-      const DPR = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(w * DPR);
-      canvas.height = Math.round(h * DPR);
-      scale = Math.min(w / DESIGN_W, h / DESIGN_H) * 0.94;
-      ox = (w - DESIGN_W * scale) / 2;
-      oy = (h - DESIGN_H * scale) / 2;
+    function positionOverlays() {
       if (buttonRef?.current) {
         buttonRef.current.style.left = `${CIRC_CX * scale + ox}px`;
         buttonRef.current.style.top = `${CIRC_CY * scale + oy}px`;
       }
+      if (labelRef?.current) {
+        labelRef.current.style.left = `${CIRC_CX * scale + ox}px`;
+        labelRef.current.style.top = `${(CIRC_CY + CIRC_R + 14) * scale + oy}px`;
+      }
+    }
+
+    function resize(w: number, h: number) {
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(w * DPR);
+      canvas.height = Math.round(h * DPR);
+      scale = Math.min(w / DESIGN_W, h / DESIGN_H) * 0.97;
+      ox = (w - DESIGN_W * scale) / 2;
+      oy = (h - DESIGN_H * scale) / 2;
+      positionOverlays();
     }
 
     function crossed(a: number, b: number, x: number) {
@@ -271,12 +274,12 @@ export function useDigitalHeartbeat(
       const [hx, hy] = pointAt(path, h);
       ctx.save();
       ctx.shadowColor = `rgb(${col})`;
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = 24;
       ctx.fillStyle = `rgb(${col})`;
       ctx.beginPath();
       ctx.arc(hx, hy, r, 0, tau);
       ctx.fill();
-      ctx.shadowBlur = 26;
+      ctx.shadowBlur = 32;
       ctx.beginPath();
       ctx.arc(hx, hy, r * 0.5, 0, tau);
       ctx.fill();
@@ -290,7 +293,7 @@ export function useDigitalHeartbeat(
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       ctx.shadowColor = `rgb(${col})`;
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 16;
       ctx.beginPath();
       pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
       ctx.stroke();
@@ -299,12 +302,12 @@ export function useDigitalHeartbeat(
 
     function flash(cx: number, cy: number, intensity: number, col: string) {
       if (intensity <= 0) return;
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 34);
-      g.addColorStop(0, `rgba(${col},${intensity * 0.8})`);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 38);
+      g.addColorStop(0, `rgba(${col},${intensity * 0.9})`);
       g.addColorStop(1, `rgba(${col},0)`);
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(cx, cy, 34, 0, tau);
+      ctx.arc(cx, cy, 38, 0, tau);
       ctx.fill();
     }
 
@@ -323,24 +326,23 @@ export function useDigitalHeartbeat(
       ctx.setTransform(scale * DPR, 0, 0, scale * DPR, ox * DPR, oy * DPR);
       ctx.drawImage(bg, 0, 0, DESIGN_W, DESIGN_H);
 
-      // Held memory side — steady teal glow + cross-couple shimmer
-      const [holdPath, xPath, pX] = q
-        ? [HOLD_HI, X_HI, pXHI]
-        : [HOLD_LO, X_LO, pXLO];
-      glow(holdPath, C.teal, 3, 0.85);
-      glow(xPath, C.teal, 2.4, 0.5);
+      // Memory: held side glows teal + cross-couple shimmer
+      const [holdPath, pX] = q ? [HOLD_HI, pXHI] : [HOLD_LO, pXLO];
+      const xPath = q ? X_HI : X_LO;
+      glow(holdPath, C.teal, 4, 0.9);
+      glow(xPath, C.teal, 3, 0.65);
       comet(pX, (shimmer * 60) % pX.total, C.teal, 26, 2);
 
-      // The travelling spark (warm = the beat)
+      // Travelling spark (warm) — flashes gates as it passes
       const path = q ? loopHi : loopLo;
       const headPt = pointAt(path, head);
-      flash(AND.cx, AND.cy, near(headPt, AND.cx, AND.cy, 40), C.warm);
-      flash(NOT.cx, NOT.cy, near(headPt, NOT.cx, NOT.cy, 34), C.warm);
-      flash(N1.cx, N1.cy, near(headPt, N1.cx, N1.cy, 40), C.warm);
-      flash(N2.cx, N2.cy, near(headPt, N2.cx, N2.cy, 40), C.warm);
-      flash(150, 260, near(headPt, 150, 260, 30) * 0.7, C.warm);
-      flash(CIRC_CX, CIRC_CY, near(headPt, CIRC_CX, CIRC_CY, CIRC_R + 10) * 0.5, C.warm);
-      comet(path, head, C.warm, 54, 3.6);
+      flash(AND.cx, AND.cy, near(headPt, AND.cx, AND.cy, 44), C.warm);
+      flash(NOT.cx, NOT.cy, near(headPt, NOT.cx, NOT.cy, 36), C.warm);
+      flash(N1.cx, N1.cy, near(headPt, N1.cx, N1.cy, 44), C.warm);
+      flash(N2.cx, N2.cy, near(headPt, N2.cx, N2.cy, 44), C.warm);
+      flash(150, 260, near(headPt, 150, 260, 32) * 0.7, C.warm);
+      flash(CIRC_CX, CIRC_CY, near(headPt, CIRC_CX, CIRC_CY, CIRC_R + 12) * 0.5, C.warm);
+      comet(path, head, C.warm, 54, 4.2);
 
       rafId = requestAnimationFrame(frame);
     }

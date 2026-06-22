@@ -46,12 +46,14 @@ export const Title = () => {
         transition={{ duration: 0.6, delay: 0.22 }}
         className="font-mono text-sm text-(--muted) flex items-center gap-1"
       >
-        <TypeAnimation
-          sequence={terminalLines}
-          wrapper="span"
-          speed={68}
-          repeat={Infinity}
-        />
+        {!isMobile && (
+          <TypeAnimation
+            sequence={terminalLines}
+            wrapper="span"
+            speed={68}
+            repeat={Infinity}
+          />
+        )}
         <span className="inline-block h-[0.7em] w-[1.5px] animate-blink bg-(--accent) align-middle" />
       </motion.div>
     </motion.div>
