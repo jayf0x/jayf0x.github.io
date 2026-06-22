@@ -1,6 +1,7 @@
+import { RESUME_DOWNLOAD_URL } from "@/config";
+import { useDigitalHeartbeat } from "@/lib/circuit";
 import { FileHeart } from "lucide-react";
 import { useRef } from "react";
-import { useDigitalHeartbeat } from "./useDigitalHeartbeat";
 import "./styles.css";
 
 export const Resume = () => {
@@ -22,12 +23,15 @@ export const Resume = () => {
         style={{ transform: "translate(-50%, -50%)" }}
       >
         <a
-          href="https://raw.githubusercontent.com/jayf0x/jayf0x/main/assets/Jonatan-Verstraete-resume-2026.pdf"
+          href={RESUME_DOWNLOAD_URL}
           download
           className="no-underline"
           aria-label="Download resume"
         >
-          <div id="red-button" title="Doubt everything. Find your own light. - Buddha">
+          <div
+            id="red-button"
+            title="Doubt everything. Find your own light. - Buddha"
+          >
             <FileHeart size={32} className="opacity-60" />
           </div>
         </a>
@@ -44,7 +48,8 @@ export const Resume = () => {
 
       {/* Quote — above circuit */}
       <p className="absolute left-0 top-[10%] z-10 w-full text-center font-mono text-[13px] text-white/65 italic select-none pointer-events-none px-8">
-        "The question becomes a beat — the beat becomes memory — and memory asks again."
+        "The question becomes a beat — the beat becomes memory — and memory asks
+        again."
       </p>
     </div>
   );

@@ -2,6 +2,8 @@ import { type CheckpointItem } from "@/store/checkPointStore";
 
 export const OWNER = "jayf0x";
 export const CACHE_INVALIDATION_TIME = 2 * 60 * 60 * 1000;
+export const RESUME_DOWNLOAD_URL =
+  "https://raw.githubusercontent.com/jayf0x/jayf0x/main/assets/Jonatan-Verstraete-resume-2026.pdf";
 
 export const allCheckpointItems = [
   { tag: "Ads", percentage: 80 },

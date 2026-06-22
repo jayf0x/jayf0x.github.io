@@ -32,7 +32,7 @@ export const InfoPopover = ({
           type="button"
           className={`flex items-center justify-center rounded-full transition-all duration-200 size-4.5 ${
             isOpen
-              ? "text-(--accent) bg-(--accent-dim)"
+              ? "text-accent bg-accent-dim"
               : "text-(--accent)/60 bg-transparent"
           }`}
         >
