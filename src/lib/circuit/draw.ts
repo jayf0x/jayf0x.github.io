@@ -17,8 +17,8 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
 
   // Wires: main (ink) vs feedback arcs (inkDim, thinner) — see WIRES comments in topology
   WIRES.forEach((w, i) => {
-    bgx.strokeStyle = i >= 7 ? C.inkDim : C.ink;
-    bgx.lineWidth   = i >= 7 ? 1 : 1.6;
+    bgx.strokeStyle = i >= 8 ? C.inkDim : C.ink;
+    bgx.lineWidth   = i >= 8 ? 1 : 1.6;
     bgx.lineJoin    = "round";
     bgx.lineCap     = "round";
     bgx.beginPath();

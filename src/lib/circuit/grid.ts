@@ -20,9 +20,10 @@ export const COLS = {
   notIn:      240 / DESIGN_W,  // NOT gate input edge
   xorLeft:    360 / DESIGN_W,  // XOR gate left edge / input
   xorOut:     408 / DESIGN_W,  // XOR gate output pin
-  circLeft:   430 / DESIGN_W,  // orbit circle left tangent  (CIRC_CX − CIRC_R)
+  circLeft:   445 / DESIGN_W,  // orbit circle left tangent  (CIRC_CX − CIRC_R)
   circ:       490 / DESIGN_W,  // orbit circle center        (CIRC_CX)
-  circRight:  550 / DESIGN_W,  // orbit circle right tangent (CIRC_CX + CIRC_R) = SPLIT2
+  circRight:  535 / DESIGN_W,  // orbit circle right tangent (CIRC_CX + CIRC_R)
+  split2:     560 / DESIGN_W,  // SPLIT2 — 25px breathing room after orbit before splitting up/down
   latchLeft:  720 / DESIGN_W,  // SR latch left edge — pushed right so right span (400px) matches left
   latchOut:   770 / DESIGN_W,  // SR latch output pins       (latchLeft + 50px)
   feedRight:  890 / DESIGN_W,  // right edge of feedback arcs — symmetric: 400px from CIRC_CX

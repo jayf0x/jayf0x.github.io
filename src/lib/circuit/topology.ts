@@ -18,7 +18,7 @@
 
 import type { Point } from "./types";
 import { gpt, registerPt } from "./grid";
-import { buildPath, arcPts } from "./path";
+import { buildPath, loopPts } from "./path";
 import { notGate, xorGate, srLatch } from "./gates";
 
 // ─── gate instances ───────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ export const LATCH = srLatch(gpt("latchLeft", "center"  )[0], gpt("latchLeft", "
 
 export const CONV:     Point = registerPt("CONV",     gpt("feedLeft",  "center"));
 export const SPLIT1:   Point = registerPt("SPLIT1",   gpt("split1",    "center"));
-export const SPLIT2:   Point = registerPt("SPLIT2",   gpt("circRight", "center")); // orbit exit
+export const SPLIT2:   Point = registerPt("SPLIT2",   gpt("split2",    "center")); // post-orbit split (25px right of orbit tangent)
 export const Q_OUT:    Point = registerPt("Q_OUT",    [LATCH.qOut[0],    LATCH.qOut[1]]);
 export const QBAR_OUT: Point = registerPt("QBAR_OUT", [LATCH.qBarOut[0], LATCH.qBarOut[1]]);
 
@@ -54,8 +54,8 @@ const LATCH_X = gpt("latchLeft", "center")[0]; // 590
 
 // ─── static wires ─────────────────────────────────────────────────────────────
 // Drawn once onto the background canvas.
-// 0–6 → main signal wires (ink, 1.6px)
-// 7–8 → feedback arcs (inkDim, 1px)
+// 0–7 → main signal wires (ink, 1.6px)
+// 8–9 → feedback arcs (inkDim, 1px)
 
 export const WIRES: Point[][] = [
   // 0: input trunk — CONV → SPLIT1
@@ -68,13 +68,16 @@ export const WIRES: Point[][] = [
   [[NOT.bub[0] + NOT.bub[2], NOT.cy], [330, NOT.cy], [330, gpt("xorLeft", "xorBot")[1]], gpt("xorLeft", "xorBot")],
   // 4: XOR out → orbit left tangent
   [gpt("xorOut", "center"), gpt("circLeft", "center")],
-  // 5: orbit exit → LATCH S pin (top NAND upper input)
+  // 5: orbit right tangent → SPLIT2 (visible breathing-room segment after the 360° loop;
+  //    the through-button portion is hidden by the download button DOM overlay)
+  [gpt("circRight", "center"), SPLIT2],
+  // 6: SPLIT2 → LATCH S pin (top NAND upper input)
   [SPLIT2, [SPLIT2[0], TOP_PIN_Y], [LATCH_X, TOP_PIN_Y]],
-  // 6: orbit exit → LATCH R pin (bot NAND lower input)
+  // 7: SPLIT2 → LATCH R pin (bot NAND lower input)
   [SPLIT2, [SPLIT2[0], BOT_PIN_Y], [LATCH_X, BOT_PIN_Y]],
-  // 7: Q  top feedback arc (dim)
+  // 8: Q  top feedback arc (dim)
   [Q_OUT,    gpt("feedRight", "latchTop"), gpt("feedRight", "feedTop"), gpt("feedLeft", "feedTop"), CONV],
-  // 8: Q̄ bot feedback arc (dim)
+  // 9: Q̄ bot feedback arc (dim)
   [QBAR_OUT, gpt("feedRight", "latchBot"), gpt("feedRight", "feedBot"), gpt("feedLeft", "feedBot"), CONV],
 ];
 
@@ -107,14 +110,16 @@ const SUF_QBAR: Point[] = [gpt("feedRight", "latchBot"), gpt("feedRight", "feedB
 
 export const loopQ = buildPath([
   ...PRE_HI,
-  ...arcPts(true).slice(1), // orbit arc top half (π → 2π), skip duplicate start
+  ...loopPts().slice(1),    // full 360° around the button, returns to circLeft
+  SPLIT2,                   // traverse through button (hidden) → emerge at SPLIT2
   ...latchPathQ,
   ...SUF_Q,
 ]);
 
 export const loopQBar = buildPath([
   ...PRE_HI,
-  ...arcPts(true).slice(1),
+  ...loopPts().slice(1),
+  SPLIT2,
   ...latchPathQBar,
   ...SUF_QBAR,
 ]);
@@ -143,4 +148,4 @@ export const notBranchPath = buildPath([
 
 export const dSPLIT1_dist   = buildPath([CONV, SPLIT1]).total;
 export const dXOR_dist      = buildPath([CONV, SPLIT1, gpt("split1", "xorTop"), gpt("xorLeft", "xorTop")]).total;
-export const dLATCH_TRIGGER = buildPath([...PRE_HI, ...arcPts(true).slice(1), ...latchPathQ]).total;
+export const dLATCH_TRIGGER = buildPath([...PRE_HI, ...loopPts().slice(1), SPLIT2, ...latchPathQ]).total;

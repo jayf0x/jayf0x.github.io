@@ -42,3 +42,16 @@ export function arcPts(top: boolean, steps = 20): Point[] {
   }
   return pts;
 }
+
+// Full 360° loop starting and ending at the left tangent (angle π), going
+// clockwise (down first → right → up → back to left). Used for the orbit
+// revolution the comet performs around the download button.
+export function loopPts(steps = 40): Point[] {
+  const pts: Point[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const a = Math.PI + 2 * Math.PI * t;
+    pts.push([CIRC_CX + CIRC_R * Math.cos(a), CIRC_CY + CIRC_R * Math.sin(a)]);
+  }
+  return pts;
+}

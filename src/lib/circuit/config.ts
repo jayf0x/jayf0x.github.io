@@ -7,11 +7,11 @@ export const DESIGN_H = 520;
 export const BASE = 360;
 
 // Orbit circle: center and radius.
-// The comet travels the top arc of this circle between XOR output and SR latch input.
-// In the page, the red download button sits visually at this center.
+// Sized ~5px larger than the 80px download button so the comet visibly loops
+// around it. The comet does a full 360° revolution before continuing to memory.
 export const CIRC_CX = 490;
 export const CIRC_CY = 260;
-export const CIRC_R  = 60;
+export const CIRC_R  = 45;
 
 export const tau = Math.PI * 2;
 
@@ -21,7 +21,7 @@ export const C = {
   inkDim: "#46505f",  // feedback arc wire color (dimmer, thinner)
   warm:   "255,184,84",
   teal:   "255,124,84",
-  gateBg: "rgba(8, 12, 20, 0.94)", // gate body fill — covers wires that pass through
+  gateBg: "rgba(24, 32, 48, 1)", // gate body fill — opaque slate so bodies read distinctly against page bg
 } as const;
 
 // Gate glow colors (RGB strings for use in rgba()).
