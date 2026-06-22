@@ -45,7 +45,7 @@ export const Sidebar = ({ onSelect, onSort }: SidebarProps) => {
     if (!isLoading && !open && !isMobile && !isLarge) {
       setTimeout(() => setOpen(true), 500);
     }
-  }, [isLoading, isMobile, isLarge]);
+  }, [isLoading, isMobile, isLarge, open]);
 
   const sidebarContent = (
     selectHandler: (name: string) => void,

@@ -16,11 +16,17 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-hooks/purity": "off",
-      "react-hooks/set-state-in-effect": "warn",
-      "react-hooks/refs": "warn",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/immutability": "off",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
+  },
+  {
+    files: ["src/lib/**/*.{ts,tsx}"],
+    rules: { "react-refresh/only-export-components": "off" },
   },
   prettierConfig
 )

@@ -26,7 +26,7 @@ const usePopoverElement = ({
 
   useLayoutEffect(() => {
     element.className = containerClassName ?? "";
-  }, [containerClassName]);
+  }, [containerClassName, element]);
 
   return ref;
 };

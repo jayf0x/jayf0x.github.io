@@ -182,10 +182,8 @@ export const ChatWidget = () => {
   }, [isOpen]);
 
   const countdownProgress =
-    // eslint-disable-next-line react-hooks/refs
     countdown !== null && initialEtaRef.current
-      ? // eslint-disable-next-line react-hooks/refs
-        1 - countdown / initialEtaRef.current
+      ? 1 - countdown / initialEtaRef.current
       : null;
 
   return (
