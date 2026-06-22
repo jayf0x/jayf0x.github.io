@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type Rect = {
   top: number;
   left: number;

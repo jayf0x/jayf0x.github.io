@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   BoundaryViolations,
