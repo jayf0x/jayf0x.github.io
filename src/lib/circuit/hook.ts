@@ -133,16 +133,16 @@ export function useDigitalHeartbeat(
 
       if (crossed(a, b, dLATCH_TRIGGER)) {
         bitPop_1 = 1;
-        pendingBit = 1 - latchBit;
         // Ghost fires on the path we're about to leave
         ghostCurrentPath = latchBit === 0 ? ghostQ : ghostQBar;
         ghostActive = true; ghostHead = 0; ghostAlpha = 1;
         // Only the comet leaving the active Q fires
         if (latchBit === 0) { cross1Active = true; cross1Head = 0; cross1Alpha = 1; }
         else                 { cross2Active = true; cross2Head = 0; cross2Alpha = 1; }
+        // pendingBit is set when the cross comet ARRIVES (not here at Q output)
       }
 
-      // Switch active loop at CONV (position 0) — both loops start there, seamless
+      // Apply the bit switch at CONV — seamless since both loops start at CONV
       if (pendingBit !== latchBit && crossed(a, b, 0)) {
         latchBit = pendingBit;
       }
@@ -159,12 +159,18 @@ export function useDigitalHeartbeat(
       if (cross1Active) {
         cross1Head += BASE * dt;
         cross1Alpha = Math.max(0, 1 - cross1Head / crossPath1.total);
-        if (cross1Head >= crossPath1.total) { cross1Active = false; cross1Head = 0; }
+        if (cross1Head >= crossPath1.total) {
+          cross1Active = false; cross1Head = 0;
+          pendingBit = 1 - latchBit; // cross comet arrived at Q2 input → schedule bit flip
+        }
       }
       if (cross2Active) {
         cross2Head += BASE * dt;
         cross2Alpha = Math.max(0, 1 - cross2Head / crossPath2.total);
-        if (cross2Head >= crossPath2.total) { cross2Active = false; cross2Head = 0; }
+        if (cross2Head >= crossPath2.total) {
+          cross2Active = false; cross2Head = 0;
+          pendingBit = 1 - latchBit; // cross comet arrived at Q1 input → schedule bit flip
+        }
       }
     }
 

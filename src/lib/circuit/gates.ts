@@ -53,16 +53,17 @@ export function srLatch(lx: number, cy: number, gap = 50): SrLatchShape {
     `M ${lx},${gy - 20} L ${lx},${gy + 20} Q ${lx + 40},${gy + 20} ${lx + 40},${gy} Q ${lx + 40},${gy - 20} ${lx},${gy - 20} Z`;
   const bubR = 5;
 
-  // Cross-coupling: 5-segment route so the two wires never share a segment.
-  // N = short vertical step, diag = 45° run (|dx|=|dy|).
-  // Derived from gap so the path lands exactly on each gate's input pin.
-  const N    = (2 * (gap - 40)) / 5; // = 24 when gap=100
-  const diag = 50 + N;               // = 74; horizontal gap from Q_OUT to lx-N
+  // Cross-coupling: 4-segment routes entering the NEAREST input pin of each gate.
+  // Cross 1: Q (top) → upper pin of bottom gate (nearest to top).
+  // Cross 2: Q̄ (bottom) → lower pin of top gate (nearest to bottom).
+  // N = short vertical step; 45° diagonal lands exactly on the target pin
+  // when gap=100 (constraint: 50+N == gap-10-N  →  N=(gap-60)/2 = 20).
+  const N = (gap - 60) / 2; // = 20 when gap=100; diagonal = 50+N = 70, |dx|=|dy| → exact 45°
   const cross: Point[][] = [
-    // Q_OUT [lx+50,ty] → down N → 45°down-left → down N/2 → right into bot input
-    [[lx + 50, ty], [lx + 50, ty + N], [lx - N, ty + N + diag], [lx - N, by + 10], [lx, by + 10]],
-    // Q̄_OUT [lx+50,by] → up N  → 45°up-left   → up N/2   → right into top input
-    [[lx + 50, by], [lx + 50, by - N], [lx - N, by - N - diag], [lx - N, ty - 10], [lx, ty - 10]],
+    // Q_OUT[lx+50,ty] → down N → 45°down-left → right into bot upper pin [lx, by-10]
+    [[lx + 50, ty], [lx + 50, ty + N], [lx - N, by - 10], [lx, by - 10]],
+    // Q̄_OUT[lx+50,by] → up N  → 45°up-left   → right into top lower pin [lx, ty+10]
+    [[lx + 50, by], [lx + 50, by - N], [lx - N, ty + 10], [lx, ty + 10]],
   ];
 
   return {
