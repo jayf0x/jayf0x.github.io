@@ -1,6 +1,8 @@
 import type { Path, Point, Seg } from "./types";
 import { CIRC_CX, CIRC_CY, CIRC_R } from "./config";
 
+// Build a polyline Path from an ordered list of waypoints.
+// Stores each segment with its cumulative start distance for O(n) pointAt lookups.
 export function buildPath(pts: Point[]): Path {
   const segs: Seg[] = [];
   let total = 0;
@@ -13,6 +15,8 @@ export function buildPath(pts: Point[]): Path {
   return { segs, total };
 }
 
+// Interpolate a point at distance d along path p.
+// d wraps modulo total length, so callers can pass headA directly.
 export function pointAt(p: Path, d: number): Point {
   const T = p.total;
   d = ((d % T) + T) % T;
@@ -26,6 +30,9 @@ export function pointAt(p: Path, d: number): Point {
   return [L.b[0], L.b[1]];
 }
 
+// Sample the orbit circle as a polyline of `steps` segments.
+// top=true  → left half → right half (π → 2π): the path the comet takes
+// top=false → right half → left half (π → 0): currently unused
 export function arcPts(top: boolean, steps = 20): Point[] {
   const pts: Point[] = [];
   for (let i = 0; i <= steps; i++) {
