@@ -9,18 +9,22 @@ export type NotGateShape = {
   cy: number;
 };
 
-export type SimpleGateShape = {
-  path: string;
+export type XorGateShape = {
+  outerArc: string;
+  body: string;
   cx: number;
   cy: number;
 };
 
-export type BubbedGateShape = SimpleGateShape & {
-  bub: [number, number, number];
+export type SrLatchShape = {
+  top: { path: string; bub: [number, number, number]; cx: number; cy: number };
+  bot: { path: string; bub: [number, number, number]; cx: number; cy: number };
+  cross: [Point, Point, Point, Point][];
+  qOut: Point;
+  qBarOut: Point;
 };
 
-// ─── current gates (AND + NOR pair) ──────────────────────────────────────────
-// TODO: replace andGate → xorGate, norGate × 2 → srLatch  (see plan-circuit.md)
+// ─── gates ───────────────────────────────────────────────────────────────────
 
 export function notGate(ix: number, iy: number): NotGateShape {
   return {
@@ -35,30 +39,27 @@ export function notGate(ix: number, iy: number): NotGateShape {
   };
 }
 
-export function andGate(lx: number, cy: number): SimpleGateShape {
-  return {
-    path: `M ${lx},${cy - 20} L ${lx},${cy + 20} Q ${lx + 44},${cy + 20} ${lx + 44},${cy} Q ${lx + 44},${cy - 20} ${lx},${cy - 20} Z`,
-    cx: lx + 22,
-    cy,
-  };
+export function xorGate(lx: number, cy: number): XorGateShape {
+  const outerArc = `M ${lx - 6},${cy - 20} Q ${lx + 6},${cy} ${lx - 6},${cy + 20}`;
+  const body = `M ${lx},${cy - 20} Q ${lx + 12},${cy} ${lx},${cy + 20} Q ${lx + 30},${cy + 20} ${lx + 48},${cy} Q ${lx + 30},${cy - 20} ${lx},${cy - 20} Z`;
+  return { outerArc, body, cx: lx + 28, cy };
 }
 
-export function norGate(lx: number, cy: number): BubbedGateShape {
+export function srLatch(lx: number, cy: number, gap = 50): SrLatchShape {
+  const ty = cy - gap / 2;
+  const by = cy + gap / 2;
+  const nandPath = (gy: number) =>
+    `M ${lx},${gy - 20} L ${lx},${gy + 20} Q ${lx + 40},${gy + 20} ${lx + 40},${gy} Q ${lx + 40},${gy - 20} ${lx},${gy - 20} Z`;
+  const bubR = 5;
+  const cross: [Point, Point, Point, Point][] = [
+    [[lx + 50, ty], [lx + 56, ty], [lx + 56, by + 10], [lx, by + 10]],
+    [[lx + 50, by], [lx + 60, by], [lx + 60, ty + 10], [lx, ty + 10]],
+  ];
   return {
-    path: `M ${lx},${cy - 18} Q ${lx + 12},${cy} ${lx},${cy + 18} Q ${lx + 30},${cy + 18} ${lx + 48},${cy} Q ${lx + 30},${cy - 18} ${lx},${cy - 18} Z`,
-    bub: [lx + 53, cy, 5],
-    cx: lx + 24,
-    cy,
+    top: { path: nandPath(ty), bub: [lx + 45, ty, bubR], cx: lx + 20, cy: ty },
+    bot: { path: nandPath(by), bub: [lx + 45, by, bubR], cx: lx + 20, cy: by },
+    cross,
+    qOut: [lx + 50, ty],
+    qBarOut: [lx + 50, by],
   };
 }
-
-// ─── future gates (add here when implementing plan-circuit.md) ───────────────
-
-// xorGate(lx, cy): extra back-curve + OR body, no bubble
-//   back curve: M lx-6,cy-20  Q lx+6,cy  lx-6,cy+20
-//   body:       M lx,cy-20  Q lx+12,cy  lx,cy+20  Q lx+30,cy+20  lx+48,cy  Q lx+30,cy-20  lx,cy-20  Z
-//   output tip: lx+48, cy
-
-// srLatch(lx, cy, gap): two NAND gates (AND body + output bubble) with cross-coupling
-//   NAND top at cy-gap/2, NAND bot at cy+gap/2
-//   cross wires: top-output → bot-lower-input, bot-output → top-lower-input

@@ -2,7 +2,7 @@ import type { RefObject } from "react";
 import { useEffect } from "react";
 import { DESIGN_W, DESIGN_H, BASE, CIRC_CX, CIRC_CY, CIRC_R, C, GCOL, tau } from "./config";
 import { pointAt } from "./path";
-import { NOT, AND, N1, N2, loopHi, loopLo, dNOR_A, dNOR_B } from "./topology";
+import { NOT, XOR, LATCH, WIRES, loopHi, ghostPath, dLATCH_TRIGGER, dSPLIT1_dist, dXOR_dist } from "./topology";
 import { renderStatic, drawComet, drawFlash } from "./draw";
 
 const CCX = (90 + 660) / 2;
@@ -38,10 +38,10 @@ export function useDigitalHeartbeat(
 
     // ── animation state ───────────────────────────────────────────────────
     let headA = 0;
-    let headB = loopLo.total / 2; // comB starts half a cycle behind
     let bitPop_1 = 0;
-    let bitPop_2 = 0;
-    let lastFired = 0; // 1=N1, 0=N2
+    let ghostActive = false;
+    let ghostHead = 0;
+    let ghostAlpha = 0;
     let last = 0;
     let rafId = 0;
 
@@ -88,21 +88,30 @@ export function useDigitalHeartbeat(
     }
 
     function step(dt: number) {
-      const TA = loopHi.total, TB = loopLo.total;
-      const prevA = headA, prevB = headB;
+      const T = loopHi.total;
+      const prev = headA;
       headA += BASE * dt;
-      headB += BASE * dt;
 
-      const aA = ((prevA % TA) + TA) % TA, bA = ((headA % TA) + TA) % TA;
-      if (crossed(aA, bA, dNOR_A)) { bitPop_1 = 1; lastFired = 1; }
+      const a = ((prev % T) + T) % T;
+      const b = ((headA % T) + T) % T;
+      if (crossed(a, b, dLATCH_TRIGGER)) {
+        bitPop_1 = 1;
+        ghostActive = true;
+        ghostHead = 0;
+        ghostAlpha = 1;
+      }
 
-      const aB = ((prevB % TB) + TB) % TB, bB = ((headB % TB) + TB) % TB;
-      if (crossed(aB, bB, dNOR_B)) { bitPop_2 = 1; lastFired = 0; }
-
-      if (headA >= TA) headA -= TA;
-      if (headB >= TB) headB -= TB;
+      if (headA >= T) headA -= T;
       if (bitPop_1 > 0) bitPop_1 = Math.max(0, bitPop_1 - dt * 3.2);
-      if (bitPop_2 > 0) bitPop_2 = Math.max(0, bitPop_2 - dt * 3.2);
+
+      if (ghostActive) {
+        ghostHead += BASE * dt;
+        ghostAlpha = Math.max(0, 1 - ghostHead / ghostPath.total);
+        if (ghostHead >= ghostPath.total) {
+          ghostActive = false;
+          ghostHead = 0;
+        }
+      }
     }
 
     function frame(now: number) {
@@ -120,58 +129,75 @@ export function useDigitalHeartbeat(
       }
       ctx.drawImage(bg, 0, 0, DESIGN_W, DESIGN_H);
 
-      // Subtle active-path glow
-      for (const path of [loopHi, loopLo]) {
+      // Active-path glow
+      ctx.save();
+      ctx.strokeStyle = `rgba(${C.warm},0.12)`;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(loopHi.segs[0].a[0], loopHi.segs[0].a[1]);
+      for (const s of loopHi.segs) ctx.lineTo(s.b[0], s.b[1]);
+      ctx.stroke();
+      ctx.restore();
+
+      // NOT branch aura: glows while main comet is between SPLIT1 and XOR input
+      const ha = ((headA % loopHi.total) + loopHi.total) % loopHi.total;
+      const tBranch = (ha - dSPLIT1_dist) / (dXOR_dist - dSPLIT1_dist);
+      const notAura = tBranch > 0 && tBranch < 1 ? Math.sin(tBranch * Math.PI) * 0.45 : 0;
+
+      if (notAura > 0) {
         ctx.save();
-        ctx.strokeStyle = `rgba(${C.warm},0.12)`;
-        ctx.lineWidth = 2;
-        ctx.lineJoin = "round";
+        ctx.strokeStyle = `rgba(${C.warm},${notAura})`;
+        ctx.lineWidth = 2.5;
         ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(path.segs[0].a[0], path.segs[0].a[1]);
-        for (const s of path.segs) ctx.lineTo(s.b[0], s.b[1]);
-        ctx.stroke();
+        ctx.lineJoin = "round";
+        [WIRES[2], WIRES[3]].forEach(w => {
+          ctx.beginPath();
+          w.forEach((p, j) => j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+          ctx.stroke();
+        });
         ctx.restore();
       }
 
-      // Latch gate bubbles: pop on trigger, glow on stored bit
-      // TODO (plan-circuit.md §Animation): update for SR latch Q/Q-bar outputs
+      drawFlash(ctx, NOT.cx, NOT.cy, notAura * 0.8, GCOL.not);
+
+      // Latch bubbles: Q glows stored, Q-bar stays dim
       [
-        { x: N1.bub[0], y: N1.bub[1], pop: bitPop_1, stored: lastFired === 1 },
-        { x: N2.bub[0], y: N2.bub[1], pop: bitPop_2, stored: lastFired === 0 },
-      ].forEach(({ x, y, pop, stored }) => {
-        const alpha = pop > 0 ? 1 : stored ? 0.55 : 0.15;
-        const radius = pop > 0 ? 5 + pop * 2 : stored ? 4 : 3;
-        const blur = pop > 0 ? 14 : stored ? 8 : 2;
+        { x: LATCH.top.bub[0], y: LATCH.top.bub[1], pop: bitPop_1, primary: true  },
+        { x: LATCH.bot.bub[0], y: LATCH.bot.bub[1], pop: 0,        primary: false },
+      ].forEach(({ x, y, pop, primary }) => {
+        const alpha  = pop > 0 ? 1    : primary ? 0.55 : 0.18;
+        const radius = pop > 0 ? 5 + pop * 2 : primary ? 4 : 2.5;
+        const blur   = pop > 0 ? 14   : primary ? 8    : 2;
         ctx.save();
-        ctx.shadowColor = `rgb(${C.teal})`;
+        ctx.shadowColor = `rgb(${GCOL.latch})`;
         ctx.shadowBlur = blur;
-        ctx.fillStyle = `rgba(${C.teal},${alpha})`;
+        ctx.fillStyle = `rgba(${GCOL.latch},${alpha})`;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, tau);
         ctx.fill();
         ctx.restore();
       });
 
+      // Ghost comet: Q-bar → bottom arc, fades over its path
+      if (ghostActive && ghostAlpha > 0.02) {
+        ctx.save();
+        ctx.globalAlpha = ghostAlpha;
+        drawComet(ctx, ghostPath, ghostHead, GCOL.latch, 40, 3);
+        ctx.restore();
+      }
+
+      // Main comet
       const headPtA = pointAt(loopHi, headA);
-      const headPtB = pointAt(loopLo, headB);
+      const wGateA  = near(headPtA, XOR.cx, XOR.cy, 42);
+      const wN1A    = near(headPtA, LATCH.top.cx, LATCH.top.cy, 42);
 
-      const wNotB = near(headPtB, NOT.cx, NOT.cy, 38);
-      const wGateA = near(headPtA, AND.cx, AND.cy, 42);
-      const wGateB = near(headPtB, AND.cx, AND.cy, 42);
-      const wN1A = near(headPtA, N1.cx, N1.cy, 42);
-      const wN2B = near(headPtB, N2.cx, N2.cy, 42);
-
-      drawFlash(ctx, NOT.cx, NOT.cy, wNotB, GCOL.not);
-      drawFlash(ctx, AND.cx, AND.cy, Math.max(wGateA, wGateB), GCOL.gate);
-      drawFlash(ctx, N1.cx, N1.cy, wN1A, GCOL.latch);
-      drawFlash(ctx, N2.cx, N2.cy, wN2B, GCOL.latch);
+      drawFlash(ctx, XOR.cx, XOR.cy, wGateA, GCOL.gate);
+      drawFlash(ctx, LATCH.top.cx, LATCH.top.cy, wN1A, GCOL.latch);
 
       const colA = wN1A > 0.2 ? GCOL.latch : wGateA > 0.2 ? GCOL.gate : C.warm;
-      const colB = wN2B > 0.2 ? GCOL.latch : wGateB > 0.2 ? GCOL.gate : wNotB > 0.2 ? GCOL.not : C.warm;
-
       drawComet(ctx, loopHi, headA, colA, 54, 4);
-      drawComet(ctx, loopLo, headB, colB, 54, 4);
 
       rafId = requestAnimationFrame(frame);
     }

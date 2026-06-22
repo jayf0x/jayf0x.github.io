@@ -5,18 +5,17 @@
 import type { Path } from "./types";
 import { C, GCOL, CIRC_CX, CIRC_CY, CIRC_R, tau } from "./config";
 import { pointAt } from "./path";
-import { NOT, AND, N1, N2, WIRES, CROSS, SPLITTER_DOTS } from "./topology";
+import { NOT, XOR, LATCH, WIRES, SPLITTER_DOTS } from "./topology";
 
 // ─── background (static, drawn once) ─────────────────────────────────────────
-// TODO (plan-circuit.md §Draw): update to render XOR gate and SR latch
 
 export function renderStatic(bgx: CanvasRenderingContext2D): void {
-  bgx.clearRect(0, 0, CIRC_CX * 2, CIRC_CY * 2); // cleared by caller before call
+  bgx.clearRect(0, 0, CIRC_CX * 2, CIRC_CY * 2);
 
   // Wires: main (ink) vs feedback (inkDim)
   WIRES.forEach((w, i) => {
-    bgx.strokeStyle = i >= 6 ? C.inkDim : C.ink;
-    bgx.lineWidth = i >= 6 ? 1 : 1.6;
+    bgx.strokeStyle = i >= 7 ? C.inkDim : C.ink;
+    bgx.lineWidth = i >= 7 ? 1 : 1.6;
     bgx.lineJoin = "round";
     bgx.lineCap = "round";
     bgx.beginPath();
@@ -42,13 +41,18 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.arc(NOT.bub[0], NOT.bub[1], NOT.bub[2], 0, tau);
   bgx.stroke();
 
-  // Main gate (AND, becomes XOR)
+  // XOR gate: dashed back arc first, then body
   bgx.strokeStyle = C.ink;
   bgx.lineWidth = 1.6;
-  bgx.stroke(new Path2D(AND.path));
+  bgx.setLineDash([4, 3]);
+  bgx.stroke(new Path2D(XOR.outerArc));
+  bgx.setLineDash([]);
+  bgx.stroke(new Path2D(XOR.body));
 
-  // Right gates (NOR pair, becomes SR latch)
-  [N1, N2].forEach((g) => {
+  // SR NAND latch — two gate bodies + bubbles
+  bgx.strokeStyle = C.ink;
+  bgx.lineWidth = 1.6;
+  [LATCH.top, LATCH.bot].forEach((g) => {
     bgx.stroke(new Path2D(g.path));
     bgx.beginPath();
     bgx.arc(g.bub[0], g.bub[1], g.bub[2], 0, tau);
@@ -60,7 +64,7 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.lineWidth = 1.4;
   bgx.lineJoin = "round";
   bgx.lineCap = "round";
-  CROSS.forEach((w) => {
+  LATCH.cross.forEach((w) => {
     bgx.beginPath();
     w.forEach((p, j) => (j ? bgx.lineTo(p[0], p[1]) : bgx.moveTo(p[0], p[1])));
     bgx.stroke();
@@ -70,7 +74,7 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
   SPLITTER_DOTS.forEach(([x, y]) => {
     bgx.fillStyle = C.ink;
     bgx.beginPath();
-    bgx.arc(x, y, 3, 0, tau);
+    bgx.arc(x, y, 4, 0, tau);
     bgx.fill();
   });
 }

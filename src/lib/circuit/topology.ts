@@ -1,85 +1,73 @@
 // Circuit topology: gate positions, wire layout, comet loop paths.
-// This is the main file to edit when redesigning the circuit.
-// See plan-circuit.md for the XOR + SR-latch redesign.
 
 import type { Point } from "./types";
 import { CIRC_CX, CIRC_CY, CIRC_R } from "./config";
 import { buildPath, arcPts } from "./path";
-import { notGate, andGate, norGate } from "./gates";
+import { notGate, xorGate, srLatch } from "./gates";
 
 // ─── gate instances ───────────────────────────────────────────────────────────
-// TODO (plan-circuit.md §Gates): swap andGate→xorGate, norGate×2→srLatch
 
-export const NOT = notGate(240, 290);
-export const AND = andGate(360, 260);   // becomes XOR
-export const N1 = norGate(560, 210);    // becomes SR latch top
-export const N2 = norGate(560, 310);    // becomes SR latch bot
+export const NOT   = notGate(240, 290);
+export const XOR   = xorGate(360, 260);
+export const LATCH = srLatch(590, 260, 50);
 
 // ─── key points ──────────────────────────────────────────────────────────────
 
-export const CONV: Point = [90, 260]; // input arrival / feedback convergence
-// TODO (plan-circuit.md §Splitters): add SPLIT1=[130,260], SPLIT2=[CIRC_CX+CIRC_R,CIRC_CY]
+export const CONV:     Point = [90, 260];
+export const SPLIT1:   Point = [130, 260];
+export const SPLIT2:   Point = [CIRC_CX + CIRC_R, CIRC_CY]; // [550, 260]
+export const Q_OUT:    Point = [LATCH.qOut[0],    LATCH.qOut[1]];    // [640, 235]
+export const QBAR_OUT: Point = [LATCH.qBarOut[0], LATCH.qBarOut[1]]; // [640, 285]
 
 // ─── static wires ─────────────────────────────────────────────────────────────
-// Indices 0-5: main signal (ink color). 6+: feedback arcs (inkDim, thinner).
-// TODO (plan-circuit.md §Wires): replace with new fan-out topology
+// Indices 0-6: main signal (ink). Indices 7-8: feedback arcs (inkDim, thinner).
 
 export const WIRES: Point[][] = [
-  [CONV, [90, 250], [360, 250]],                              // 0: top AND input (comA)
-  [CONV, [90, 290], [210, 290], [240, 290]],                 // 1: to NOT gate (comB)
-  [[284, 290], [330, 290], [330, 270], [360, 270]],          // 2: NOT→AND bottom (comB)
-  [[404, 260], [CIRC_CX - CIRC_R, CIRC_CY]],                // 3: AND out→circle
-  [[CIRC_CX + CIRC_R, CIRC_CY], [550, 210], [560, 210]],    // 4: circle→N1
-  [[CIRC_CX + CIRC_R, CIRC_CY], [550, 310], [560, 310]],    // 5: circle→N2
-  [[618, 210], [660, 210], [660, 110], [90, 110], CONV],     // 6: N1 outer feedback
-  [[618, 310], [660, 310], [660, 410], [90, 410], CONV],     // 7: N2 outer feedback
-];
-
-// Cross-coupling wires between NOR gates (drawn teal).
-// TODO (plan-circuit.md §SRLatch): replace with NAND cross-coupling inside srLatch()
-export const CROSS: Point[][] = [
-  [[618, 210], [618, 228], [560, 292], [560, 301]], // N1 out → N2 upper input
-  [[618, 310], [618, 292], [560, 228], [560, 219]], // N2 out → N1 lower input
+  [CONV, SPLIT1],                                               // 0: input trunk
+  [SPLIT1, [130, 240], [360, 240]],                             // 1: direct → XOR top
+  [SPLIT1, [130, 290], [240, 290]],                             // 2: → NOT in   (aura wire)
+  [[284, 290], [330, 290], [330, 280], [360, 280]],             // 3: NOT out → XOR bot (aura wire)
+  [[408, 260], [CIRC_CX - CIRC_R, CIRC_CY]],                   // 4: XOR out → circle left
+  [SPLIT2, [550, 225], [590, 225]],                             // 5: → NAND top S upper pin
+  [SPLIT2, [550, 275], [590, 275]],                             // 6: → NAND bot R upper pin
+  [Q_OUT,    [660, 235], [660, 110], [90, 110], CONV],          // 7: Q top arc (feedback)
+  [QBAR_OUT, [660, 285], [660, 410], [90, 410], CONV],          // 8: Q-bar bot arc (feedback)
 ];
 
 // Splitter dots rendered as filled circles.
-// TODO (plan-circuit.md §Splitters): add SPLIT1, SPLIT2
-export const SPLITTER_DOTS: Point[] = [
-  CONV,
-  [CIRC_CX + CIRC_R, CIRC_CY],
-];
+export const SPLITTER_DOTS: Point[] = [CONV, SPLIT1, SPLIT2, Q_OUT, QBAR_OUT];
 
 // ─── comet loop paths ─────────────────────────────────────────────────────────
-// loopHi: comA — direct top input path
-// loopLo: comB — through NOT gate path
-// TODO (plan-circuit.md §LoopPaths): update PRE/SUF segments for new topology
 
 const PRE_HI: Point[] = [
-  CONV, [90, 250], [360, 250], [404, 260], [CIRC_CX - CIRC_R, CIRC_CY],
-];
-const PRE_LO: Point[] = [
-  CONV, [90, 290], [210, 290], [240, 290], [284, 290],
-  [330, 290], [330, 270], [360, 270], [404, 260], [CIRC_CX - CIRC_R, CIRC_CY],
+  CONV, SPLIT1, [130, 240], [360, 240],
+  [408, 260],
+  [CIRC_CX - CIRC_R, CIRC_CY],
 ];
 
-const topArc = arcPts(true);
-const botArc = arcPts(false);
-
-const SUF_HI: Point[] = [
-  [550, 210], [560, 210], [618, 210], [660, 210], [660, 110], [90, 110], CONV,
-];
-const SUF_LO: Point[] = [
-  [550, 310], [560, 310], [618, 310], [660, 310], [660, 410], [90, 410], CONV,
+// Comet traverses top NAND: SPLIT2 gap → S upper pin → gate center-y → Q output
+const latchPath: Point[] = [
+  [550, 225], // NAND top S upper pin (SPLIT2 → this is implicit buildPath segment)
+  [590, 225], // enter gate left edge
+  [590, 235], // slide to gate center-y
+  [640, 235], // exit Q output = Q_OUT
 ];
 
-export const loopHi = buildPath([...PRE_HI, ...topArc.slice(1), ...SUF_HI]);
-export const loopLo = buildPath([...PRE_LO, ...botArc.slice(1), ...SUF_LO]);
+const SUF_HI: Point[] = [[660, 235], [660, 110], [90, 110], CONV];
 
-// Distance at which each comet exits its NOR gate output bubble (triggers flash/pop).
-// TODO (plan-circuit.md §TriggerDistances): recalculate after loop path changes
-export const dNOR_A = buildPath([
-  ...PRE_HI, ...topArc.slice(1), [550, 210], [560, 210], [N1.bub[0], 210],
-]).total;
-export const dNOR_B = buildPath([
-  ...PRE_LO, ...botArc.slice(1), [550, 310], [560, 310], [N2.bub[0], 310],
-]).total;
+export const loopHi = buildPath([
+  ...PRE_HI,
+  ...arcPts(true).slice(1), // arc ends at SPLIT2 [550,260]
+  ...latchPath,
+  ...SUF_HI,
+]);
+
+// Ghost comet: Q-bar output → bottom arc → CONV (one-shot, fades over path length)
+export const ghostPath = buildPath([
+  QBAR_OUT, [660, 285], [660, 410], [90, 410], CONV,
+]);
+
+// Pre-computed distances used in hook.ts — avoids rebuilding paths per frame
+export const dSPLIT1_dist   = buildPath([CONV, SPLIT1]).total;
+export const dXOR_dist      = buildPath([CONV, SPLIT1, [130, 240], [360, 240]]).total;
+export const dLATCH_TRIGGER = buildPath([...PRE_HI, ...arcPts(true).slice(1), ...latchPath]).total;
