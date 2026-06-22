@@ -137,9 +137,9 @@ export function useDigitalHeartbeat(
         // Ghost fires on the path we're about to leave
         ghostCurrentPath = latchBit === 0 ? ghostQ : ghostQBar;
         ghostActive = true; ghostHead = 0; ghostAlpha = 1;
-        // Cross-coupling comets fire
-        cross1Active = true; cross1Head = 0; cross1Alpha = 1;
-        cross2Active = true; cross2Head = 0; cross2Alpha = 1;
+        // Only the comet leaving the active Q fires
+        if (latchBit === 0) { cross1Active = true; cross1Head = 0; cross1Alpha = 1; }
+        else                 { cross2Active = true; cross2Head = 0; cross2Alpha = 1; }
       }
 
       // Switch active loop at CONV (position 0) — both loops start there, seamless

@@ -19,7 +19,7 @@ export type XorGateShape = {
 export type SrLatchShape = {
   top: { path: string; bub: [number, number, number]; cx: number; cy: number };
   bot: { path: string; bub: [number, number, number]; cx: number; cy: number };
-  cross: [Point, Point, Point, Point][];
+  cross: Point[][];
   qOut: Point;
   qBarOut: Point;
 };
@@ -53,13 +53,16 @@ export function srLatch(lx: number, cy: number, gap = 50): SrLatchShape {
     `M ${lx},${gy - 20} L ${lx},${gy + 20} Q ${lx + 40},${gy + 20} ${lx + 40},${gy} Q ${lx + 40},${gy - 20} ${lx},${gy - 20} Z`;
   const bubR = 5;
 
-  // Cross-coupling wires with 45° diagonal routed through [lx+60, cy]:
-  //   Q (ty) → right → down to cy → 45° down-left → bottom gate input (by+10)
-  //   Q̄ (by) → right → up to cy   → 45° up-left   → top gate input  (ty-10)
-  // The diagonal is exactly 45° when gap/2 + 10 = 60 (i.e. gap = 100).
-  const cross: [Point, Point, Point, Point][] = [
-    [[lx + 50, ty], [lx + 60, ty], [lx + 60, cy], [lx, by + 10]],
-    [[lx + 50, by], [lx + 60, by], [lx + 60, cy], [lx, ty - 10]],
+  // Cross-coupling: 5-segment route so the two wires never share a segment.
+  // N = short vertical step, diag = 45° run (|dx|=|dy|).
+  // Derived from gap so the path lands exactly on each gate's input pin.
+  const N    = (2 * (gap - 40)) / 5; // = 24 when gap=100
+  const diag = 50 + N;               // = 74; horizontal gap from Q_OUT to lx-N
+  const cross: Point[][] = [
+    // Q_OUT [lx+50,ty] → down N → 45°down-left → down N/2 → right into bot input
+    [[lx + 50, ty], [lx + 50, ty + N], [lx - N, ty + N + diag], [lx - N, by + 10], [lx, by + 10]],
+    // Q̄_OUT [lx+50,by] → up N  → 45°up-left   → up N/2   → right into top input
+    [[lx + 50, by], [lx + 50, by - N], [lx - N, by - N - diag], [lx - N, ty - 10], [lx, ty - 10]],
   ];
 
   return {
