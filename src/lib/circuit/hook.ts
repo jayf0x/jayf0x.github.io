@@ -82,25 +82,11 @@ export function useDigitalHeartbeat(
     let rafId = 0;
 
     // ── responsive layout ─────────────────────────────────────────────────
-    // CCX is the diagram's true visual midpoint (x spans 90→660).
-    // CIRC_CX=490 sits 115 units RIGHT of CCX — so centering on CIRC_CX
-    // starves the right side and overflows the left. We center on CCX instead
-    // and move the button wrapper to where CIRC_CX actually lands.
-    const CCX = (90 + 660) / 2; // 375
-
     let scale = 1,
       ox = 0,
       oy = 0,
       mobTx = 0,
       mobTy = 0;
-
-    function positionOverlays() {
-      if (!buttonRef?.current) return;
-      const btnX = isMobile ? CIRC_CY * scale + mobTx : CIRC_CX * scale + ox;
-      const btnY = isMobile ? -CIRC_CX * scale + mobTy : CIRC_CY * scale + oy;
-      buttonRef.current.style.left = `${btnX}px`;
-      buttonRef.current.style.top  = `${btnY}px`;
-    }
 
     function resize(w: number, h: number) {
       const DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -109,12 +95,30 @@ export function useDigitalHeartbeat(
       scale = isMobile
         ? Math.min(h / DESIGN_W, w / DESIGN_H) * 1.25
         : Math.min(w / DESIGN_W, h / DESIGN_H) * 0.95;
-      // Center the whole diagram on CCX so neither side overflows
-      ox    = w / 2 - CCX    * scale;
-      oy    = h / 2 - CIRC_CY * scale;
-      mobTx = w / 2 - CIRC_CY * scale;
-      mobTy = h / 2 + CCX    * scale;
-      positionOverlays();
+
+      // Read the button's actual screen position so the diagram wraps around it.
+      let targetX = w / 2;
+      let targetY = h / 2;
+      if (buttonRef?.current) {
+        const btnRect  = buttonRef.current.getBoundingClientRect();
+        const contRect = container!.getBoundingClientRect();
+        targetX = btnRect.left - contRect.left + btnRect.width  / 2;
+        targetY = btnRect.top  - contRect.top  + btnRect.height / 2;
+      }
+
+      // Clamp scale so the full diagram fits around targetX/targetY.
+      // The diagram extends (CIRC_CX−90)=400 units left and (660−CIRC_CX)=170 units
+      // right of the circle, and 150 units above/below CIRC_CY.
+      // Without this clamp, the standard scale formula ignores the asymmetry
+      // and the left arm overflows whenever scale > targetX/400.
+      const fitH = Math.min(targetX / (CIRC_CX - 90), (w - targetX) / (660 - CIRC_CX));
+      const fitV = Math.min(targetY / (CIRC_CY - 110), (h - targetY) / (410 - CIRC_CY));
+      scale = Math.min(scale, fitH, fitV);
+
+      ox    = targetX - CIRC_CX * scale;
+      oy    = targetY - CIRC_CY * scale;
+      mobTx = targetX - CIRC_CY * scale;
+      mobTy = targetY + CIRC_CX * scale;
     }
 
     // ── animation helpers ─────────────────────────────────────────────────
