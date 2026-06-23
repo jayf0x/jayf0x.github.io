@@ -1,12 +1,10 @@
-import { allPageNames } from "@/config";
-import { currentPageAtom } from "@/store/generalStore";
-import { useAtomValue, useSetAtom } from "jotai";
+import { routeDefs } from "@/router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Avatar } from "./Avatar";
 import { Title } from "./Title";
 
 export const Header = () => {
-  const currentPage = useAtomValue(currentPageAtom);
-  const setPage = useSetAtom(currentPageAtom);
+  const { pathname } = useLocation();
 
   return (
     <header className="grid grid-cols-[1fr_1fr_1fr] items-center gap-4 px-5 py-4 border-b border-border/50 shrink-0">
@@ -17,20 +15,20 @@ export const Header = () => {
       </div>
 
       <nav className="flex items-center justify-end gap-5">
-        {allPageNames.map((label) => (
-          <button
-            key={`page-${label}`}
-            type="button"
-            onClick={() => setPage(label)}
-            className={`font-mono text-sm uppercase tracking-[0.06em] transition-colors duration-150 ${
-              label === currentPage
-                ? "text-accent"
-                : "text-muted hover:text-text"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        {routeDefs.map(({ path, label }) => {
+          const isActive = path === pathname;
+          return (
+            <Link
+              key={`page-${path}`}
+              to={path}
+              className={`font-mono text-sm uppercase tracking-[0.06em] transition-colors duration-150 ${
+                isActive ? "text-accent" : "text-muted hover:text-text"
+              }`}
+            >
+              {label}
+            </Link>
+          );
+        })}
       </nav>
     </header>
   );
