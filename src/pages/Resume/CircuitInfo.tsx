@@ -1,9 +1,7 @@
+import { PopoverPanel } from "@/components/PopoverPanel";
 import { Popover } from "@/lib/popover";
-import { motion } from "framer-motion";
 import { ArrowUpRight, HelpCircle } from "lucide-react";
 import { useState } from "react";
-
-const SOURCE_QUOTE = "Doubt everything. Find your own light. — Buddha";
 
 const POEM = [
   "The question becomes a pulse,",
@@ -11,16 +9,26 @@ const POEM = [
   "and memory asks again.",
 ];
 
-// Pre-filled Claude conversation explaining the piece.
+// Pre-filled Claude conversation. Gives the structure + quote + a disclaimer,
+// then asks for Claude's own reading rather than a textbook definition.
 const ASK_CLAUDE = `https://claude.ai/new?q=${encodeURIComponent(
-  `This animated SR-latch circuit on a portfolio carries the line "${POEM.join(
-    " ",
-  )}" — a riff on the Buddha quote "${SOURCE_QUOTE}". Explain how the circuit (a question computed at an XOR, stored as a bit in the latch, fed back to ask itself again) mirrors the quote about doubting and self-inquiry.`,
+  `On my portfolio there's an animated digital logic circuit captioned with this line:
+
+"${POEM.join("\n")}"
+
+The circuit is a loop:
+  input → XOR gate → orbiting pulse → SR latch (stores one bit) → feedback wires back into the XOR → repeat
+
+So: a question is computed at the XOR, the result becomes a travelling pulse, the pulse is latched as a stored bit (memory), and that stored bit feeds back to shape the next computation.
+
+This is an artistic metaphor, not a technically rigorous claim about how SR latches behave.
+
+What do you make of the relationship between the line and the circuit? I'd rather hear your own reading than an explanation of what an SR latch is.`,
 )}`;
 
-// Minimal schematic: question → memory → loop back. Mirrors the live circuit.
+// Minimal schematic mirroring the live circuit, with the numbered zones.
 const Sketch = () => (
-  <svg viewBox="0 0 200 70" className="w-full h-auto" aria-hidden>
+  <svg viewBox="0 0 200 74" className="w-full h-auto" aria-hidden>
     <g
       fill="none"
       stroke="var(--accent)"
@@ -41,53 +49,38 @@ const Sketch = () => (
       fill="var(--accent)"
       fontSize={7}
       fontFamily="ui-monospace, monospace"
-      opacity={0.55}
+      opacity={0.6}
       textAnchor="middle"
     >
-      <text x={92} y={48}>question</text>
-      <text x={143} y={48}>memory</text>
-      <text x={100} y={68}>loop</text>
+      <text x={49} y={48}>[1] question</text>
+      <text x={143} y={48}>[2] memory</text>
+      <text x={100} y={70}>[3] loop</text>
     </g>
   </svg>
 );
 
 const Content = () => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.94, y: 6 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-    className="relative p-[1.5px] rounded-2xl"
-    style={{
-      background: "var(--accent-dim)",
-      boxShadow: "0 24px 64px var(--bg-a65), 0 0 0 1px var(--overlay-xs) inset",
-    }}
-  >
-    <div className="relative z-10 w-[260px] backdrop-blur-[28px] backdrop-saturate-200 rounded-[14.5px] overflow-hidden bg-(--glass) p-4">
-      <Sketch />
+  <PopoverPanel className="w-[260px] p-4">
+    <Sketch />
 
-      <p className="mt-3 font-mono text-[12px] italic leading-relaxed text-white/70">
-        {POEM.map((line) => (
-          <span key={line} className="block">
-            {line}
-          </span>
-        ))}
-      </p>
+    <p className="mt-3 font-mono text-[12px] italic leading-relaxed text-white/70">
+      {POEM.map((line) => (
+        <span key={line} className="block">
+          {line}
+        </span>
+      ))}
+    </p>
 
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/30">
-        after {SOURCE_QUOTE}
-      </p>
-
-      <a
-        href={ASK_CLAUDE}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 flex items-center justify-between gap-2 rounded-lg px-3 py-2 font-mono text-[11.5px] text-white/60 transition-colors duration-150 hover:text-white bg-(--overlay-xs) hover:bg-(--accent-dim)"
-      >
-        <span>Ask Claude what it means</span>
-        <ArrowUpRight size={12} className="shrink-0 text-(--accent)/60" />
-      </a>
-    </div>
-  </motion.div>
+    <a
+      href={ASK_CLAUDE}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 flex items-center justify-between gap-2 rounded-lg px-3 py-2 font-mono text-[11.5px] text-white/60 transition-colors duration-150 hover:text-white bg-(--overlay-xs) hover:bg-(--accent-dim)"
+    >
+      <span>Ask Claude what it means</span>
+      <ArrowUpRight size={12} className="shrink-0 text-(--accent)/60" />
+    </a>
+  </PopoverPanel>
 );
 
 export const CircuitInfo = () => {
@@ -105,7 +98,9 @@ export const CircuitInfo = () => {
           type="button"
           aria-label="What does this mean?"
           className={`flex items-center justify-center rounded-full size-7 transition-all duration-200 ${
-            isOpen ? "text-accent bg-accent-dim" : "text-(--accent)/50 hover:text-(--accent)/80"
+            isOpen
+              ? "text-accent bg-accent-dim"
+              : "text-(--accent)/50 hover:text-(--accent)/80"
           }`}
         >
           <HelpCircle size={16} strokeWidth={1.8} />

@@ -64,8 +64,7 @@ export const App = () => {
   );
 };
 
-const screenW = () =>
-  typeof window !== "undefined" ? window.innerWidth : 0;
+const screenW = () => (typeof window !== "undefined" ? window.innerWidth : 0);
 
 const pageVariants = {
   initial: (dir: number) => ({ x: dir * screenW() }),
@@ -78,12 +77,16 @@ const usePageAnimation = (pathname: string) => {
 
   const prevIndex = routePaths.indexOf(prevRef.current as RoutePath);
   const nextIndex = routePaths.indexOf(pathname as RoutePath);
-  const direction =
-    nextIndex > prevIndex ? 1 : nextIndex < prevIndex ? -1 : 0;
+  const direction = nextIndex > prevIndex ? 1 : nextIndex < prevIndex ? -1 : 0;
 
   const commitPath = useCallback(() => {
     prevRef.current = pathname;
   }, [pathname]);
 
-  return { variants: pageVariants, direction, commitPath };
+  return {
+    variants: pageVariants,
+    direction,
+    commitPath,
+    previousPath: prevRef.current,
+  };
 };

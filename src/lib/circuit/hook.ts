@@ -47,6 +47,7 @@ import {
   crossPath1,
   crossPath2,
   dLATCH_TRIGGER,
+  dORBIT_dist,
   dSPLIT1_dist,
   dXOR_dist,
   ghostQ,
@@ -198,6 +199,7 @@ export function useDigitalHeartbeat(
       const onPhase = eventsRef.current?.onPhase;
       if (onPhase) {
         if (crossed(a, b, dXOR_dist)) onPhase("question");
+        if (crossed(a, b, dORBIT_dist)) onPhase("orbit");
         if (crossed(a, b, dLATCH_TRIGGER)) onPhase("memory");
         if (crossed(a, b, 0)) onPhase("loop");
       }

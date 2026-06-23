@@ -101,9 +101,9 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
   bgx.textAlign = "center";
   bgx.textBaseline = "middle";
   ([
-    ["question", XOR.cx, XOR.cy - 56],
-    ["memory", LATCH.top.cx + 2, LATCH.bot.cy + 44],
-    ["loop", 250, 432],
+    ["[1] question", XOR.cx, XOR.cy - 56],
+    ["[2] memory", LATCH.top.cx + 2, LATCH.bot.cy + 44],
+    ["[3] loop", 250, 432],
   ] as const).forEach(([label, x, y]) => bgx.fillText(label, x, y));
   bgx.restore();
 }

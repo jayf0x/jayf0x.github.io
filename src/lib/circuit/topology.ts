@@ -200,6 +200,9 @@ export const notBranchPath = buildPath([
 // Pre-computed arc lengths along loopQ used to fire effects at exact moments.
 
 export const dSPLIT1_dist = buildPath([CONV, SPLIT1]).total;
+
+// Distance to the orbit (the red-button core) — PRE_HI ends at the circle's left tangent.
+export const dORBIT_dist = buildPath(PRE_HI).total;
 export const dXOR_dist = buildPath([
   CONV,
   SPLIT1,

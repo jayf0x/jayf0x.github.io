@@ -14,8 +14,12 @@ export function useCircuitPhase() {
   const events = useMemo<CircuitEvents>(
     () => ({
       onPhase: (phase) => {
+        // The orbit (red-button core) only advances the cycle count.
+        if (phase === "orbit") {
+          setCycles((c) => c + 1);
+          return;
+        }
         setActive(phase);
-        if (phase === "loop") setCycles((c) => c + 1);
         clearTimeout(timer.current);
         timer.current = setTimeout(() => setActive(null), CLEAR_MS);
       },

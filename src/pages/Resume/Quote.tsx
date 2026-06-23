@@ -1,20 +1,28 @@
-import type { CircuitPhase } from "@/lib/circuit";
 import { useIsMobile } from "@/hooks/useDevice";
+import type { CircuitPhase } from "@/lib/circuit";
 
-type Fragment = { phase: CircuitPhase; n: number; text: string; pos: string };
+type Fragment = { phase: CircuitPhase; n: number; text: string };
 
-// Each line maps to a phase of the pulse and anchors near that zone of the
-// circuit. `pos` is the desktop placement; mobile stacks them at the top.
+// Each line maps to a phase of the pulse; the matching canvas zone is labelled
+// with the same [n]. The fragment lights up as the pulse passes its zone.
 const FRAGMENTS: Fragment[] = [
-  { phase: "question", n: 1, text: "The question becomes a pulse", pos: "left-[6%] top-[16%] text-left" },
-  { phase: "memory", n: 2, text: "the pulse becomes memory", pos: "right-[6%] top-[28%] text-right" },
-  { phase: "loop", n: 3, text: "and memory asks again", pos: "left-1/2 -translate-x-1/2 bottom-[8%] text-center" },
+  { phase: "question", n: 1, text: "The question becomes a pulse" },
+  { phase: "memory", n: 2, text: "the pulse becomes memory" },
+  { phase: "loop", n: 3, text: "and memory asks again" },
 ];
 
-const Line = ({ frag, lit }: { frag: Fragment; lit: boolean }) => (
+const Chip = ({ frag, lit }: { frag: Fragment; lit: boolean }) => (
   <span
-    className="font-mono text-[13px] italic select-none transition-colors duration-300"
-    style={{ color: lit ? "var(--accent)" : "rgba(255,255,255,0.6)" }}
+    className="font-mono text-[13px] font-semibold italic px-3 py-1.5 rounded-lg border whitespace-nowrap transition-all duration-300 select-none"
+    style={{
+      color: lit ? "var(--accent)" : "rgba(255,255,255,0.85)",
+      borderColor: lit ? "var(--accent)" : "var(--border)",
+      background: lit ? "var(--accent-dim)" : "var(--bg-a60)",
+      backdropFilter: "blur(8px)",
+      boxShadow: lit
+        ? "0 0 18px color-mix(in srgb, var(--accent) 40%, transparent), 0 4px 12px var(--bg-a60)"
+        : "0 4px 12px var(--bg-a45)",
+    }}
   >
     <span className="not-italic opacity-50">[{frag.n}]</span> {frag.text}
   </span>
@@ -23,22 +31,14 @@ const Line = ({ frag, lit }: { frag: Fragment; lit: boolean }) => (
 export const Quote = ({ active }: { active: CircuitPhase | null }) => {
   const isMobile = useIsMobile();
 
-  if (isMobile) {
-    return (
-      <div className="absolute left-0 top-[4%] z-10 w-full flex flex-col items-center gap-1.5 px-8 pointer-events-none">
-        {FRAGMENTS.map((frag) => (
-          <Line key={frag.n} frag={frag} lit={active === frag.phase} />
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="absolute inset-0 z-10 pointer-events-none">
+    <div
+      className={`absolute top-[4%] left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-4 pointer-events-none ${
+        isMobile ? "flex-col" : "flex-row"
+      }`}
+    >
       {FRAGMENTS.map((frag) => (
-        <div key={frag.n} className={`absolute max-w-[40%] ${frag.pos}`}>
-          <Line frag={frag} lit={active === frag.phase} />
-        </div>
+        <Chip key={frag.n} frag={frag} lit={active === frag.phase} />
       ))}
     </div>
   );
