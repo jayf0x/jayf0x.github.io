@@ -19,11 +19,13 @@ const indexRedirect = createRoute({
   },
 });
 
-const childRoutes = routeDefs.map(({ path, Component }) =>
+// Routes are componentless: the root (App) renders the matched page itself in an
+// animated motion.div (see App.tsx / useCurrentRoute) rather than via <Outlet />,
+// so the outgoing page keeps its own content while it transitions out.
+const childRoutes = routeDefs.map(({ path }) =>
   createRoute({
     getParentRoute: () => rootRoute,
     path,
-    component: Component,
     validateSearch: widgetSearchSchema,
   }),
 );

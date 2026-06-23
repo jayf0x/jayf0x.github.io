@@ -1,11 +1,9 @@
 import { useLocation } from "@tanstack/react-router";
-import { routeDefs, routePaths } from "./routes";
-import type { RoutePath } from "./schemas";
+import { routeDefs } from "./routes";
 
+// Resolve the routeDef for the current location. Falls back to the first route
+// (e.g. while "/" is redirecting, or for any unknown path).
 export const useCurrentRoute = () => {
   const { pathname } = useLocation();
-  const path = (
-    routePaths.includes(pathname as RoutePath) ? pathname : "/"
-  ) as RoutePath;
-  return routeDefs.find((r) => r.path === path)!;
+  return routeDefs.find((r) => r.path === pathname) ?? routeDefs[0];
 };

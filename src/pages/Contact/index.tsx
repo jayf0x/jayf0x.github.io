@@ -1,4 +1,5 @@
 import { InfoPopover } from "@/components/InfoPopover";
+import { DefaultLayout } from "@/layouts/DefaultLayout";
 import type { ConwayControls } from "@/lib/conway/conway";
 import { createConwayEngine } from "@/lib/conway/conway";
 import { Github, Linkedin, Package, Pause, Play } from "lucide-react";
@@ -79,8 +80,9 @@ export const Contact = () => {
   };
 
   return (
-    <div className="flex-1 relative overflow-hidden min-h-0">
-      {/* Scrollable content on top */}
+    <DefaultLayout>
+      <div className="flex-1 relative overflow-hidden min-h-0">
+        {/* Scrollable content on top */}
       <div className="relative z-10 h-full overflow-y-auto pointer-events-none">
         <div className="px-8 py-6 max-w-lg mx-auto w-full">
           <p className="font-mono text-mini tracking-[0.18em] uppercase mb-5 text-(--muted)/40">
@@ -169,6 +171,7 @@ export const Contact = () => {
           ]}
         />
       </div>
-    </div>
+      </div>
+    </DefaultLayout>
   );
 };
