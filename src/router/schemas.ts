@@ -1,7 +1,7 @@
 import { allWidgetNames } from "@/config";
 import { z } from "zod";
 
-export const routePathSchema = z.enum(["/", "/resume", "/contact"]);
+export const routePathSchema = z.enum(["/127-0-0-1", "/resume", "/contact"]);
 export type RoutePath = z.infer<typeof routePathSchema>;
 
 export const pageLabelSchema = z.enum(["127.0.0.1", "Résumé", "Contact"]);

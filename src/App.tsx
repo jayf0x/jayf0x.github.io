@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { Background } from "./components/Background";
 import { Header } from "./components/Header";
@@ -18,7 +18,7 @@ export const App = () => {
   const isMobile = useIsMobile();
   const isVoid = useCheckpointValue("Void");
   const { pathname } = useLocation();
-  const pageVariants = usePageAnimation(pathname);
+  const { variants, direction, commitPath } = usePageAnimation(pathname);
 
   const watchIsMobile = useRegisterIsMobile();
   const registerCheckpoints = useRegisterCheckpoints();
@@ -36,10 +36,15 @@ export const App = () => {
         className="relative z-20 pointer-events-none"
         style={{ display: isVoid ? "none" : "" }}
       >
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence
+          mode="popLayout"
+          custom={direction}
+          onExitComplete={commitPath}
+        >
           <motion.div
             key={`motion-page-${pathname}`}
-            variants={pageVariants}
+            custom={direction}
+            variants={variants}
             initial="initial"
             animate="animate"
             exit="exit"
@@ -59,27 +64,26 @@ export const App = () => {
   );
 };
 
+const screenW = () =>
+  typeof window !== "undefined" ? window.innerWidth : 0;
+
+const pageVariants = {
+  initial: (dir: number) => ({ x: dir * screenW() }),
+  animate: { x: 0 },
+  exit: (dir: number) => ({ x: -dir * screenW() }),
+};
+
 const usePageAnimation = (pathname: string) => {
   const prevRef = useRef(pathname);
 
   const prevIndex = routePaths.indexOf(prevRef.current as RoutePath);
   const nextIndex = routePaths.indexOf(pathname as RoutePath);
+  const direction =
+    nextIndex > prevIndex ? 1 : nextIndex < prevIndex ? -1 : 0;
 
-  const dir = prevIndex < nextIndex ? 1 : -1;
-  const w = typeof window !== "undefined" ? window.innerWidth * dir : 0;
-
-  useEffect(() => {
-    setTimeout(() => {
-      prevRef.current = pathname;
-    }, 1000);
+  const commitPath = useCallback(() => {
+    prevRef.current = pathname;
   }, [pathname]);
 
-  return useMemo(
-    () => ({
-      initial: { x: w },
-      animate: { x: 0 },
-      exit: { x: -w },
-    }),
-    [w],
-  );
+  return { variants: pageVariants, direction, commitPath };
 };

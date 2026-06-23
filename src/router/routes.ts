@@ -11,7 +11,7 @@ export type RouteDef = {
 };
 
 export const routeDefs = [
-  { path: "/", label: "127.0.0.1", Component: Home },
+  { path: "/127-0-0-1", label: "127.0.0.1", Component: Home },
   { path: "/resume", label: "Résumé", Component: Resume },
   { path: "/contact", label: "Contact", Component: Contact },
 ] as const satisfies readonly RouteDef[];

@@ -4,11 +4,20 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  redirect,
 } from "@tanstack/react-router";
 import { routeDefs } from "./routes";
 import { widgetSearchSchema } from "./schemas";
 
 const rootRoute = createRootRoute({ component: App });
+
+const indexRedirect = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  beforeLoad: () => {
+    throw redirect({ to: "/127-0-0-1" });
+  },
+});
 
 const childRoutes = routeDefs.map(({ path, Component }) =>
   createRoute({
@@ -19,7 +28,7 @@ const childRoutes = routeDefs.map(({ path, Component }) =>
   }),
 );
 
-const routeTree = rootRoute.addChildren(childRoutes);
+const routeTree = rootRoute.addChildren([indexRedirect, ...childRoutes]);
 
 export const router = createRouter({
   routeTree,
