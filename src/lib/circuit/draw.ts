@@ -93,6 +93,19 @@ export function renderStatic(bgx: CanvasRenderingContext2D): void {
     bgx.arc(x, y, 4, 0, tau);
     bgx.fill();
   });
+
+  // Zone labels — anchor each phase of the quote to its part of the circuit.
+  bgx.save();
+  bgx.fillStyle = C.inkDim;
+  bgx.font = "11px ui-monospace, monospace";
+  bgx.textAlign = "center";
+  bgx.textBaseline = "middle";
+  ([
+    ["question", XOR.cx, XOR.cy - 56],
+    ["memory", LATCH.top.cx + 2, LATCH.bot.cy + 44],
+    ["loop", 250, 432],
+  ] as const).forEach(([label, x, y]) => bgx.fillText(label, x, y));
+  bgx.restore();
 }
 
 // ─── per-frame drawing ────────────────────────────────────────────────────────

@@ -3,14 +3,22 @@ import { useIsMobile } from "@/hooks/useDevice";
 import { useDigitalHeartbeat } from "@/lib/circuit";
 import { FileHeart } from "lucide-react";
 import { useRef } from "react";
+import { CircuitInfo } from "./CircuitInfo";
+import { Quote } from "./Quote";
+import { useCircuitPhase } from "./useCircuitPhase";
 
 export const Resume = () => {
   const isMobile = useIsMobile();
+  const { active, cycles, events } = useCircuitPhase();
 
   const buttonRef = useRef<HTMLAnchorElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useDigitalHeartbeat(containerRef, buttonRef as React.RefObject<HTMLElement>);
+  useDigitalHeartbeat(
+    containerRef,
+    buttonRef as React.RefObject<HTMLElement>,
+    events,
+  );
 
   return (
     <div ref={containerRef} className="size-full relative overflow-hidden">
@@ -26,7 +34,6 @@ export const Resume = () => {
           aria-label="Download resume"
         >
           <div
-            title="Doubt everything. Find your own light. - Buddha"
             style={{
               background:
                 "radial-gradient(circle at 36% 32%, var(--c-ff9090) 0%, var(--c-e00000) 48%, var(--c-7a0000) 100%)",
@@ -43,13 +50,13 @@ export const Resume = () => {
         <p className="pointer-events-none font-mono text-[10px] uppercase tracking-[0.22em] text-white/55 whitespace-nowrap select-none translate-y-4">
           download cv
         </p>
+        <p className="pointer-events-none font-mono text-[10px] tabular-nums tracking-[0.22em] text-white/30 whitespace-nowrap select-none translate-y-4 text-center">
+          ↻ {String(cycles).padStart(4, "0")}
+        </p>
       </div>
 
-      {/* Quote — above circuit */}
-      <p className="absolute left-0 top-[10%] z-10 w-full text-center font-mono text-[13px] text-white/65 italic select-none pointer-events-none px-8">
-        The question becomes a beat <br /> the beat becomes memory <br /> and
-        memory asks again.
-      </p>
+      <Quote active={active} />
+      <CircuitInfo />
     </div>
   );
 };

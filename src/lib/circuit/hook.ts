@@ -29,7 +29,7 @@
 
 import { useIsMobile } from "@/hooks/useDevice";
 import type { RefObject } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   BASE,
   C,
@@ -42,6 +42,7 @@ import {
 } from "./config";
 import { drawComet, drawFlash, renderStatic } from "./draw";
 import { pointAt } from "./path";
+import type { CircuitEvents } from "./types";
 import {
   crossPath1,
   crossPath2,
@@ -63,8 +64,13 @@ import type { Path } from "./types";
 export function useDigitalHeartbeat(
   containerRef: RefObject<HTMLDivElement | null>,
   buttonRef?: RefObject<HTMLElement | null>,
+  events?: CircuitEvents,
 ): void {
   const isMobile = useIsMobile();
+
+  // Latest events kept in a ref so changing callbacks never restart the RAF loop.
+  const eventsRef = useRef(events);
+  eventsRef.current = events;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -147,8 +153,10 @@ export function useDigitalHeartbeat(
         // at targetY; design x extends ±400 around CIRC_CX → screen y range targetY ± 400*scale.
         const fitV = Math.min(targetY / (CIRC_CX - 90), (h - targetY) / (890 - CIRC_CX));
         scale = Math.min(scale, fitV);
-        mobTx = targetX - CIRC_CY * scale;
-        mobTy = targetY + CIRC_CX * scale;
+        // CW rotation (see frame()): small design-x (CONV/question) lands at the
+        // top so the [1][2][3] zones read top → bottom.
+        mobTx = targetX + CIRC_CY * scale;
+        mobTy = targetY - CIRC_CX * scale;
         return;
       }
 
@@ -185,6 +193,14 @@ export function useDigitalHeartbeat(
       // Normalize positions into [0, T) for threshold comparisons
       const a = ((prev  % T) + T) % T;
       const b = ((headA % T) + T) % T;
+
+      // ── Phase events: fire as the comet passes each semantic zone ────
+      const onPhase = eventsRef.current?.onPhase;
+      if (onPhase) {
+        if (crossed(a, b, dXOR_dist)) onPhase("question");
+        if (crossed(a, b, dLATCH_TRIGGER)) onPhase("memory");
+        if (crossed(a, b, 0)) onPhase("loop");
+      }
 
       // ── Latch trigger: comet exits the active NAND gate ──────────────
       if (crossed(a, b, dLATCH_TRIGGER)) {
@@ -255,8 +271,8 @@ export function useDigitalHeartbeat(
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (isMobile) {
-        // 90° CCW rotation: maps design (x,y) → screen (-y, x) before scale+offset
-        ctx.setTransform(0, -scale * DPR, scale * DPR, 0, mobTx * DPR, mobTy * DPR);
+        // 90° CW rotation: maps design (x,y) → screen (y, -x) before scale+offset
+        ctx.setTransform(0, scale * DPR, -scale * DPR, 0, mobTx * DPR, mobTy * DPR);
       } else {
         ctx.setTransform(scale * DPR, 0, 0, scale * DPR, ox * DPR, oy * DPR);
       }
