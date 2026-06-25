@@ -17,7 +17,7 @@ export const Hero = () => (
       className="mt-3 text-sm leading-relaxed text-(--overlay-a100) max-w-xl"
     >
       Developer in Ghent. I ship side projects — npm libraries, browser
-      extensions, and the odd experiment. A few I'm proud of:
+      extensions, utilities, and the odd experiment. A few I'm proud of:
     </motion.p>
   </section>
 );

@@ -231,9 +231,8 @@ export const CardContent = () => {
               </p>
               <InfoPopover
                 items={[
-                  ["Page visit counts only — no device or location data"],
                   ["Download Brave Browser", "https://brave.com/download"],
-                  ["brave://settings/extensions/v2"],
+                  ["Enable UBO brave://settings/extensions/v2", "brave://settings/extensions/v2"],
                 ]}
               />
             </div>

@@ -23,7 +23,7 @@ function selectPicks(repos: GithubRepo[], slugs: string[]): GithubRepo[] {
     const have = new Set(picks.map((r) => r.id));
     const topup = repos
       .filter((r) => !have.has(r.id) && !OMIT.has(r.name))
-      .sort((a, b) => b.stargazers_count - a.stargazers_count)
+      .sort((a, b) => b.name.localeCompare(a.name))
       .slice(0, MIN - picks.length);
     picks.push(...topup);
   }
@@ -56,12 +56,22 @@ export const Flagship = () => {
               <FlagshipCard key={`flagship-${repo.id}`} repo={repo} index={i} />
             ))}
       </div>
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+        className="mt-3 text-xs leading-relaxed text-(--overlay-a100) max-w-xl"
+      >
+        Curated by local agent. Parsed from resume.
+      </motion.p>
     </section>
   );
 };
 
 const FlagshipCard = ({ repo, index }: { repo: GithubRepo; index: number }) => {
-  const accent = repo.language ? getStackMeta(repo.language).bg : "var(--accent)";
+  const accent = repo.language
+    ? getStackMeta(repo.language).bg
+    : "var(--accent)";
   const href = repo.homepage || repo.html_url;
 
   return (
@@ -77,7 +87,9 @@ const FlagshipCard = ({ repo, index }: { repo: GithubRepo; index: number }) => {
       {/* top accent bar, tinted by language */}
       <span
         className="absolute inset-x-0 top-0 h-0.5 opacity-50 group-hover:opacity-100 transition-opacity"
-        style={{ background: accent !== "transparent" ? accent : "var(--accent)" }}
+        style={{
+          background: accent !== "transparent" ? accent : "var(--accent)",
+        }}
       />
 
       <div className="flex items-center justify-between">
@@ -105,7 +117,9 @@ const FlagshipCard = ({ repo, index }: { repo: GithubRepo; index: number }) => {
           <span className="inline-flex items-center gap-1">
             <span
               className="w-2 h-2 rounded-full"
-              style={{ background: accent !== "transparent" ? accent : "var(--muted)" }}
+              style={{
+                background: accent !== "transparent" ? accent : "var(--muted)",
+              }}
             />
             {repo.language}
           </span>
