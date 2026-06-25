@@ -1,10 +1,20 @@
 import { InfoPopover } from "@/components/InfoPopover";
+import { useAnalyticsBlocked } from "@/hooks/useAnalyticsBlocked";
 import { useIsMobile } from "@/hooks/useDevice";
 import { Info, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
 import Xarrow, { Xwrapper } from "react-xarrows";
 
 export const CardContent = () => {
   const isMobile = useIsMobile();
+  const isBlocked = useAnalyticsBlocked();
+  const [analyticsOn, setAnalyticsOn] = useState(true);
+  const [jokeShown, setJokeShown] = useState(false);
+
+  const handleAnalyticsToggle = () => {
+    if (analyticsOn) setJokeShown(true);
+    setAnalyticsOn((v) => !v);
+  };
 
   return (
     <div className="space-y-6 pb-5">
@@ -207,6 +217,72 @@ export const CardContent = () => {
           )}
         </div>
       </Xwrapper>
+
+      {/* Analytics toggle */}
+      <div
+        className="rounded-xl px-4 py-3 flex flex-col gap-2"
+        style={{ background: "var(--overlay-xs)", border: "1px solid var(--overlay-sm)" }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-[13px] font-medium" style={{ color: "var(--border-a70)" }}>
+                Analytics
+              </p>
+              <InfoPopover
+                items={[
+                  ["Page visit counts only — no device or location data"],
+                  ["Download Brave Browser", "https://brave.com/download"],
+                  ["brave://settings/extensions/v2"],
+                ]}
+              />
+            </div>
+            <p className="text-xs" style={{ color: "var(--border-a35)" }}>
+              {isBlocked
+                ? "Blocked by your ad blocker — that's fine!"
+                : "Page visit counts only — no tracking, no fingerprinting."}
+            </p>
+          </div>
+
+          {isBlocked ? (
+            <span
+              className="shrink-0 text-[10px] font-mono px-2 py-1 rounded-md"
+              style={{
+                background: "var(--overlay-sm)",
+                color: "var(--border-a35)",
+                border: "1px solid var(--overlay-sm)",
+              }}
+            >
+              AdBlocked
+            </span>
+          ) : (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={analyticsOn}
+              onClick={handleAnalyticsToggle}
+              className="shrink-0 relative w-9 h-5 rounded-full transition-colors duration-200 focus-visible:outline-none"
+              style={{
+                background: analyticsOn
+                  ? "color-mix(in srgb, var(--accent) 70%, transparent)"
+                  : "color-mix(in srgb, var(--border-a35) 40%, transparent)",
+              }}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200"
+                style={{ transform: analyticsOn ? "translateX(16px)" : "translateX(0)" }}
+              />
+            </button>
+          )}
+        </div>
+
+        {jokeShown && !isBlocked && (
+          <p className="text-[11px] leading-relaxed" style={{ color: "var(--border-a35)" }}>
+            oops — analytics already left the device. 👋 This is how most analytics really work.{" "}
+            <span style={{ color: "var(--accent)" }}>Keep learning!</span>
+          </p>
+        )}
+      </div>
     </div>
   );
 };
