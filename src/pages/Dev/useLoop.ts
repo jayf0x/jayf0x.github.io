@@ -1,6 +1,12 @@
 // Self-contained animation hook for the Dev page.
-// Draws a circuit-style pulse traveling Friction → Focus → Understanding → learning → back.
-// No dependency on the shared circuit library — this is an isolated experiment.
+// A single pulse travels a loop reading Friction → Focus → Understanding → learning → back.
+// The stages are drawn as real circuit components, not logic gates:
+//   Friction      → resistor   (resists the flow)
+//   Focus         → diode      (lets it pass one way)
+//   Understanding → capacitor  (stores / accumulates)
+//   learning      → no component — its label sits inside the loop; the wire just returns
+// Minimal lines, a near-white pulse with a faint blue shine. The renderer is decoupled
+// from rAF (see renderScene) so the GIF capture driver can drive it deterministically.
 
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
@@ -12,24 +18,27 @@ type Path = { segs: Seg[]; total: number };
 
 export type FlowPhase  = "friction" | "focus" | "understanding" | "learning";
 export type FlowEvents = { onPhase?: (p: FlowPhase) => void };
+export type Theme      = "dark" | "light";
 
 // ─── config ───────────────────────────────────────────────────────────────────
-// Exported so a GIF-capture script can set the container to exactly this size.
-export const FLOW_W = 640;
-export const FLOW_H = 340;
+// Compact, wide design space — sized for a small horizontal GIF.
+export const FLOW_W = 560;
+export const FLOW_H = 200;
 
-const SPEED   = 280;        // design-px / sec
-const tau     = Math.PI * 2;
-const GATEBG  = "#0b1420";  // gate fill — opaque, erases wire through body
+export const SPEED = 230;   // design-px / sec — unhurried
+const tau = Math.PI * 2;
 
-const C = {
-  wire:          "#2b3d57",
-  wirePx:        "43,61,87",
-  friction:      "255,148,52",
-  focus:         "46,208,255",
-  understanding: "172,72,255",
-  learning:      "88,228,118",
-} as const;
+// ─── palette ──────────────────────────────────────────────────────────────────
+export type Palette = {
+  bg: string; wire: string; label: string;
+  comet: string; glow: string; // RGB strings for rgba()
+};
+
+export function palette(theme: Theme): Palette {
+  return theme === "light"
+    ? { bg: "#ffffff", wire: "#c4ccd9", label: "#8a93a3", comet: "37,99,235",  glow: "59,130,246"  }
+    : { bg: "#060608", wire: "#2f3e57", label: "#3a4a66", comet: "223,233,255", glow: "130,175,255" };
+}
 
 const LABEL: Record<FlowPhase, string> = {
   friction:      "Friction",
@@ -66,23 +75,31 @@ function pointAt(p: Path, d: number): Pt {
 
 // ─── geometry ─────────────────────────────────────────────────────────────────
 //
-//   [TL] ──[FRICTION]──[FOCUS]──[UNDERSTANDING]──[TR]
-//    │                                             │
-//   [BL] ──────────────[LEARNING]──────────────[BR]
+//   [TL] ─[RESISTOR]─[DIODE]─[CAPACITOR]─ [TR]
+//    │              learning              │
+//   [BL] ──────────────────────────────── [BR]
 //
-const TL: Pt = [ 80, 118];
-const TR: Pt = [560, 118];
-const BR: Pt = [560, 240];
-const BL: Pt = [ 80, 240];
+const TL: Pt = [ 70,  68];
+const TR: Pt = [490,  68];
+const BR: Pt = [490, 150];
+const BL: Pt = [ 70, 150];
 
 const NPOS: Record<FlowPhase, Pt> = {
-  friction:      [185, 118],
-  focus:         [320, 118],
-  understanding: [455, 118],
-  learning:      [320, 240],
+  friction:      [175, 68],
+  focus:         [280, 68],
+  understanding: [385, 68],
+  learning:      [280, 150], // trigger point on the bottom rail
 };
 
-const LOOP = buildPath([
+// Where each label is drawn. learning sits *inside* the loop.
+const LPOS: Record<FlowPhase, Pt> = {
+  friction:      [175, 42],
+  focus:         [280, 42],
+  understanding: [385, 42],
+  learning:      [280, 109],
+};
+
+export const LOOP = buildPath([
   TL,
   NPOS.friction, NPOS.focus, NPOS.understanding,
   TR, BR,
@@ -99,190 +116,165 @@ const D: Record<FlowPhase, number> = {
 };
 
 // 0→1 proximity of comet to a trigger (wrap-aware)
-function prox(head: number, trigger: number, r = 74): number {
+function prox(head: number, trigger: number, r = 64): number {
   const T = LOOP.total;
   const d = Math.min(Math.abs(head - trigger), T - Math.abs(head - trigger));
   return Math.max(0, 1 - d / r);
 }
 
-// ─── gate shapes ─────────────────────────────────────────────────────────────
-//
-//  FRICTION      — buffer triangle →  (raw energy in)
-//  FOCUS         — AND gate →         (convergence)
-//  UNDERSTANDING — XOR gate →         (synthesis / new insight)
-//  LEARNING      — NOT gate ←         (transforms and feeds back)
-//
-function drawGate(
+const PHASES: FlowPhase[] = ["friction", "focus", "understanding", "learning"];
+
+// ─── component symbols ─────────────────────────────────────────────────────────
+// Each is drawn inline on a horizontal wire at y=cy. The wire behind is masked
+// with the bg color first so leads connect cleanly to the symbol.
+const MASK: Partial<Record<FlowPhase, number>> = {
+  friction: 52, focus: 40, understanding: 34,
+};
+
+function drawComponent(
   ctx: CanvasRenderingContext2D,
   phase: FlowPhase,
-  fill: string,
-  stroke: string,
-  lw: number,
+  pal: Palette,
 ): void {
-  ctx.fillStyle   = fill;
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth   = lw;
-  ctx.lineCap     = "round";
-  ctx.lineJoin    = "round";
+  const mask = MASK[phase];
+  if (!mask) return; // learning has no component
   const [cx, cy] = NPOS[phase];
 
+  ctx.fillStyle   = pal.bg;
+  ctx.fillRect(cx - mask / 2, cy - 18, mask, 36);
+
+  ctx.strokeStyle = pal.wire;
+  ctx.lineWidth   = 1.4;
+  ctx.lineCap     = "round";
+  ctx.lineJoin    = "round";
+  ctx.beginPath();
+
   switch (phase) {
-    case "friction": {
-      // Triangle buffer →
-      ctx.beginPath();
-      ctx.moveTo(cx - 20, cy - 15);
-      ctx.lineTo(cx - 20, cy + 15);
-      ctx.lineTo(cx + 20, cy);
-      ctx.closePath();
-      ctx.fill();
+    case "friction": { // resistor — zigzag
+      const w = 40, a = 7, x0 = cx - w / 2;
+      ctx.moveTo(cx - mask / 2, cy);
+      ctx.lineTo(x0, cy);
+      for (let i = 0; i < 6; i++) {
+        const x = x0 + (w * (i + 0.5)) / 6;
+        ctx.lineTo(x, cy + (i % 2 ? a : -a));
+      }
+      ctx.lineTo(cx + w / 2, cy);
+      ctx.lineTo(cx + mask / 2, cy);
       ctx.stroke();
       break;
     }
-    case "focus": {
-      // AND gate → (D-shape)
-      const p = new Path2D(
-        `M ${cx - 18},${cy - 15} L ${cx - 18},${cy + 15} ` +
-        `Q ${cx + 20},${cy + 15} ${cx + 20},${cy} ` +
-        `Q ${cx + 20},${cy - 15} ${cx - 18},${cy - 15} Z`,
-      );
-      ctx.fill(p);
-      ctx.stroke(p);
-      break;
-    }
-    case "understanding": {
-      // XOR gate → (D-shape body + characteristic dashed outer arc)
-      const lx = cx - 22;
-      const body = new Path2D(
-        `M ${lx},${cy - 16} Q ${lx + 12},${cy} ${lx},${cy + 16} ` +
-        `Q ${lx + 22},${cy + 16} ${lx + 44},${cy} ` +
-        `Q ${lx + 22},${cy - 16} ${lx},${cy - 16} Z`,
-      );
-      const outerArc = new Path2D(
-        `M ${lx - 5},${cy - 16} Q ${lx + 7},${cy} ${lx - 5},${cy + 16}`,
-      );
-      ctx.fill(body);
-      ctx.stroke(body);
-      ctx.save();
-      ctx.setLineDash([3, 2]);
-      ctx.stroke(outerArc);
-      ctx.restore();
-      break;
-    }
-    case "learning": {
-      // NOT gate ← (mirrored triangle + inversion bubble on output left)
-      ctx.beginPath();
-      ctx.moveTo(cx + 20, cy - 15);
-      ctx.lineTo(cx + 20, cy + 15);
-      ctx.lineTo(cx - 20, cy);
-      ctx.closePath();
-      ctx.fill();
+    case "focus": { // diode — triangle + cathode bar
+      ctx.moveTo(cx - mask / 2, cy);
+      ctx.lineTo(cx - 9, cy);
       ctx.stroke();
-      // inversion bubble on the output (left side — learning transforms back)
       ctx.beginPath();
-      ctx.arc(cx - 25, cy, 4.5, 0, tau);
-      ctx.fill();
+      ctx.moveTo(cx - 9, cy - 10);
+      ctx.lineTo(cx - 9, cy + 10);
+      ctx.lineTo(cx + 8, cy);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + 8, cy - 11);
+      ctx.lineTo(cx + 8, cy + 11);
+      ctx.moveTo(cx + 8, cy);
+      ctx.lineTo(cx + mask / 2, cy);
+      ctx.stroke();
+      break;
+    }
+    case "understanding": { // capacitor — two parallel plates
+      ctx.moveTo(cx - mask / 2, cy);
+      ctx.lineTo(cx - 5, cy);
+      ctx.moveTo(cx - 5, cy - 13);
+      ctx.lineTo(cx - 5, cy + 13);
+      ctx.moveTo(cx + 5, cy - 13);
+      ctx.lineTo(cx + 5, cy + 13);
+      ctx.moveTo(cx + 5, cy);
+      ctx.lineTo(cx + mask / 2, cy);
       ctx.stroke();
       break;
     }
   }
 }
 
-// ─── static render (drawn once to offscreen canvas) ───────────────────────────
-function renderStatic(bgx: CanvasRenderingContext2D): void {
-  bgx.clearRect(0, 0, FLOW_W, FLOW_H);
+// ─── scene render (one full frame for a given head) ─────────────────────────────
+// Draws at design coordinates into ctx. Caller sets any scaling transform.
+export function renderScene(
+  ctx: CanvasRenderingContext2D,
+  head: number,
+  pal: Palette,
+): void {
+  // background
+  ctx.fillStyle = pal.bg;
+  ctx.fillRect(0, 0, FLOW_W, FLOW_H);
 
-  // Full loop wire (gate fills will cover it inside gate bodies)
-  bgx.strokeStyle = C.wire;
-  bgx.lineWidth   = 1.5;
-  bgx.lineCap     = "round";
-  bgx.lineJoin    = "round";
-  bgx.beginPath();
-  bgx.moveTo(LOOP.segs[0].a[0], LOOP.segs[0].a[1]);
-  for (const s of LOOP.segs) bgx.lineTo(s.b[0], s.b[1]);
-  bgx.stroke();
+  // loop wire — thin
+  ctx.strokeStyle = pal.wire;
+  ctx.lineWidth   = 1.4;
+  ctx.lineCap     = "round";
+  ctx.lineJoin    = "round";
+  ctx.beginPath();
+  ctx.moveTo(LOOP.segs[0].a[0], LOOP.segs[0].a[1]);
+  for (const s of LOOP.segs) ctx.lineTo(s.b[0], s.b[1]);
+  ctx.stroke();
 
-  // Gate fills erase wire through gate bodies; outlines drawn on top
-  const phases: FlowPhase[] = ["friction", "focus", "understanding", "learning"];
-  for (const ph of phases) drawGate(bgx, ph, GATEBG, C.wire, 1.5);
+  for (const ph of PHASES) drawComponent(ctx, ph, pal);
 
-  // Corner splitter dots
-  bgx.fillStyle = C.wire;
-  for (const [x, y] of [TL, TR, BR, BL] as Pt[]) {
-    bgx.beginPath();
-    bgx.arc(x, y, 3.5, 0, tau);
-    bgx.fill();
+  // labels — dim, brightening near the comet
+  ctx.font         = "13px ui-monospace, monospace";
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "middle";
+  for (const ph of PHASES) {
+    const p = prox(head, D[ph]);
+    const [lx, ly] = LPOS[ph];
+    if (p > 0) {
+      const [nx, ny] = NPOS[ph];
+      drawFlash(ctx, nx, ny, p, pal, 30);
+      ctx.fillStyle = `rgba(${pal.comet},${0.35 + p * 0.65})`;
+    } else {
+      ctx.fillStyle = pal.label;
+    }
+    ctx.fillText(LABEL[ph], lx, ly);
   }
 
-  // Dim labels (overdrawn with glow per-frame when active)
-  bgx.font         = "bold 13px ui-monospace, monospace";
-  bgx.textAlign    = "center";
-  bgx.textBaseline = "middle";
-  bgx.fillStyle    = "#253550";
-  for (const ph of phases) {
-    const [nx, ny] = NPOS[ph];
-    bgx.fillText(LABEL[ph], nx, ph === "learning" ? ny + 40 : ny - 40);
-  }
-
-  // Arrow direction hints on the long wire segments (subtle ›› markers)
-  bgx.fillStyle = "#1e2e47";
-  bgx.font      = "9px ui-monospace, monospace";
-  // top rail arrows between nodes
-  const arrowsTop: Pt[] = [[252, 112], [388, 112]];
-  for (const [x, y] of arrowsTop) bgx.fillText("›", x, y);
-  // right rail arrow going down
-  bgx.fillText("›", 565, 179);
-  // bottom rail arrow going left
-  bgx.fillText("‹", 435, 246);
-  bgx.fillText("‹", 200, 246);
-  // left rail arrow going up
-  bgx.fillText("›", 75, 179);
+  drawComet(ctx, head, pal);
 }
 
-// ─── per-frame drawing ─────────────────────────────────────────────────────────
-function drawComet(ctx: CanvasRenderingContext2D, head: number, col: string): void {
-  const TRAIL = 22;
-  const LEN   = 58;
-
+function drawComet(ctx: CanvasRenderingContext2D, head: number, pal: Palette): void {
+  const TRAIL = 16, LEN = 44;
   for (let i = TRAIL; i >= 1; i--) {
     const f = i / TRAIL;
     const [x, y] = pointAt(LOOP, head - LEN * f);
-    ctx.fillStyle = `rgba(${col},${(1 - f) * 0.62})`;
+    ctx.fillStyle = `rgba(${pal.glow},${(1 - f) * 0.4})`;
     ctx.beginPath();
-    ctx.arc(x, y, (1 - f) * 2.3 + 0.3, 0, tau);
+    ctx.arc(x, y, (1 - f) * 1.8 + 0.3, 0, tau);
     ctx.fill();
   }
-
-  // Glowing head
   const [hx, hy] = pointAt(LOOP, head);
   ctx.save();
-  ctx.shadowColor = `rgb(${col})`;
-  ctx.shadowBlur  = 14;
-  ctx.fillStyle   = `rgb(${col})`;
+  ctx.shadowColor = `rgba(${pal.glow},0.9)`;
+  ctx.shadowBlur  = 8;
+  ctx.fillStyle   = `rgb(${pal.comet})`;
   ctx.beginPath();
-  ctx.arc(hx, hy, 3.6, 0, tau);
+  ctx.arc(hx, hy, 2.6, 0, tau);
   ctx.fill();
   ctx.restore();
 }
 
 function drawFlash(
   ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  t: number,
-  col: string,
-  r = 42,
+  cx: number, cy: number, t: number, pal: Palette, r = 30,
 ): void {
   if (t <= 0) return;
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  g.addColorStop(0, `rgba(${col},${t * 0.52})`);
-  g.addColorStop(1, `rgba(${col},0)`);
+  g.addColorStop(0, `rgba(${pal.glow},${t * 0.22})`);
+  g.addColorStop(1, `rgba(${pal.glow},0)`);
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, tau);
   ctx.fill();
 }
 
-// ─── hook ─────────────────────────────────────────────────────────────────────
+// ─── live hook ─────────────────────────────────────────────────────────────────
 export function useLoop(
   containerRef: RefObject<HTMLDivElement | null>,
   events?: FlowEvents,
@@ -294,122 +286,54 @@ export function useLoop(
     const container = containerRef.current;
     if (!container) return;
 
-    // Offscreen bg: painted once, blit each frame
-    const bg  = document.createElement("canvas");
-    const bgx = bg.getContext("2d")!;
-
-    function paintStatic(dpr: number) {
-      bg.width  = FLOW_W * dpr;
-      bg.height = FLOW_H * dpr;
-      bgx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      renderStatic(bgx);
-    }
-
-    // Main (display) canvas
     const canvas = document.createElement("canvas");
     canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
     container.appendChild(canvas);
     const ctx = canvas.getContext("2d")!;
+    const pal = palette("dark");
 
-    const T    = LOOP.total;
-    let head   = 0;
-    let last   = 0;
-    let rafId  = 0;
-    let scale  = 1;
-    let ox     = 0;
-    let oy     = 0;
+    const T   = LOOP.total;
+    let head  = 0;
+    let last  = 0;
+    let rafId = 0;
+    let scale = 1, ox = 0, oy = 0, dpr = 1;
 
     function resize(w: number, h: number) {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width  = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
-      scale = Math.min(w / FLOW_W, h / FLOW_H) * 0.90;
-      ox    = (w - FLOW_W * scale) / 2;
-      oy    = (h - FLOW_H * scale) / 2;
-      paintStatic(dpr);
+      scale = Math.min(w / FLOW_W, h / FLOW_H) * 0.92;
+      ox = (w - FLOW_W * scale) / 2;
+      oy = (h - FLOW_H * scale) / 2;
     }
 
     function crossed(a: number, b: number, x: number): boolean {
       return a <= b ? x > a && x <= b : x > a || x <= b;
     }
 
-    const PHASES: FlowPhase[] = ["friction", "focus", "understanding", "learning"];
-
     function frame(now: number) {
       const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
       last = now;
-
       const prev = head;
       head += SPEED * dt;
       if (head >= T) head -= T;
 
-      const a = ((prev % T) + T) % T;
-      const b = ((head % T) + T) % T;
-
       const onPhase = eventsRef.current?.onPhase;
       if (onPhase) {
-        for (const ph of PHASES) {
-          if (crossed(a, b, D[ph])) onPhase(ph);
-        }
+        const a = ((prev % T) + T) % T, b = ((head % T) + T) % T;
+        for (const ph of PHASES) if (crossed(a, b, D[ph])) onPhase(ph);
       }
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.setTransform(scale * dpr, 0, 0, scale * dpr, ox * dpr, oy * dpr);
-
-      // Faint path aura before bg blit — gate fills will cover it inside bodies
-      ctx.save();
-      ctx.strokeStyle = `rgba(${C.wirePx},0.28)`;
-      ctx.lineWidth   = 5;
-      ctx.lineCap     = "round";
-      ctx.lineJoin    = "round";
-      ctx.beginPath();
-      ctx.moveTo(LOOP.segs[0].a[0], LOOP.segs[0].a[1]);
-      for (const s of LOOP.segs) ctx.lineTo(s.b[0], s.b[1]);
-      ctx.stroke();
-      ctx.restore();
-
-      // Blit static bg (covers aura inside gate bodies)
-      ctx.drawImage(bg, 0, 0, FLOW_W, FLOW_H);
-
-      // Node flash glows + bright labels (drawn ON TOP of bg, intentionally over gates)
-      ctx.font         = "bold 13px ui-monospace, monospace";
-      ctx.textAlign    = "center";
-      ctx.textBaseline = "middle";
-
-      for (const ph of PHASES) {
-        const p = prox(head, D[ph]);
-        if (p <= 0) continue;
-        const col     = C[ph];
-        const [nx, ny] = NPOS[ph];
-        const yOff    = ph === "learning" ? 40 : -40;
-
-        drawFlash(ctx, nx, ny, p, col, 46);
-
-        ctx.save();
-        ctx.shadowColor = `rgb(${col})`;
-        ctx.shadowBlur  = p * 16;
-        ctx.fillStyle   = `rgba(${col},${0.42 + p * 0.58})`;
-        ctx.fillText(LABEL[ph], nx, ny + yOff);
-        ctx.restore();
-      }
-
-      // Comet — color blends toward the nearest active node
-      let bestP  = 0;
-      let bestPh: FlowPhase = "friction";
-      for (const ph of PHASES) {
-        const p = prox(head, D[ph], 88);
-        if (p > bestP) { bestP = p; bestPh = ph; }
-      }
-      drawComet(ctx, head, bestP > 0.12 ? C[bestPh] : C.wirePx);
+      renderScene(ctx, head, pal);
 
       rafId = requestAnimationFrame(frame);
     }
 
     const { width, height } = container.getBoundingClientRect();
     resize(width, height);
-
     const ro = new ResizeObserver(([e]) => {
       const { inlineSize: w, blockSize: h } = e.contentBoxSize[0];
       resize(w, h);
