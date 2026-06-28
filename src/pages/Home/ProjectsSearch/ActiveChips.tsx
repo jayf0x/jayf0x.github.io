@@ -1,3 +1,4 @@
+import { getStackMeta } from "@/utils/stackMeta";
 import { X } from "lucide-react";
 
 export const ActiveChips = ({
@@ -34,7 +35,7 @@ export const ActiveChips = ({
         onClick={() => onRemoveFilter(f)}
         className="group inline-flex items-center gap-1 rounded border border-(--accent)/60 bg-(--accent)/10 px-2 py-0.5 font-mono text-mini text-(--accent) hover:border-(--accent)/80 transition-colors duration-100"
       >
-        {f}
+        {getStackMeta(f).label || f}
         <X
           size={9}
           className="ml-0.5 opacity-60 group-hover:opacity-100 transition-opacity"

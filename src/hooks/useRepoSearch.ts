@@ -1,12 +1,20 @@
 import { useMemo } from "react";
 import type { GithubRepo } from "@/utils/fetch-repository";
+import {
+  FACETS,
+  facetByName,
+  type FacetContext,
+} from "@/pages/Home/ProjectsSearch/facets";
 
 export type FilterItem = { name: string; count: number };
 
 const TOP_N = 10;
 
-function matches(repo: GithubRepo, q: string): boolean {
+function matches(repo: GithubRepo, q: string, ctx: FacetContext): boolean {
   const lower = q.toLowerCase();
+  // Searching a facet name (e.g. "npm") surfaces every repo with that property.
+  const facet = facetByName(lower);
+  if (facet?.predicate(repo, ctx)) return true;
   return (
     repo.name.toLowerCase().includes(lower) ||
     (repo.description?.toLowerCase().includes(lower) ?? false) ||
@@ -15,10 +23,20 @@ function matches(repo: GithubRepo, q: string): boolean {
   );
 }
 
+function matchesFilter(repo: GithubRepo, f: string, ctx: FacetContext): boolean {
+  const facet = facetByName(f);
+  if (facet) return facet.predicate(repo, ctx);
+  return (
+    repo.language?.toLowerCase() === f ||
+    repo.topics.some((t) => t.toLowerCase() === f)
+  );
+}
+
 export function useRepoSearch(
   repos: GithubRepo[],
   query: string,
   filters: Set<string>,
+  ctx: FacetContext,
 ) {
   const allFilters = useMemo((): FilterItem[] => {
     const counts = new Map<string, number>();
@@ -38,23 +56,30 @@ export function useRepoSearch(
       .map(([name, count]) => ({ name, count }));
   }, [repos]);
 
+  // Facet chips (NPM, Website, …) shown alongside tag filters; only the ones
+  // that actually match at least one repo.
+  const facetFilters = useMemo(
+    (): FilterItem[] =>
+      FACETS.map((f) => ({
+        name: f.name,
+        count: repos.filter((r) => f.predicate(r, ctx)).length,
+      })).filter((f) => f.count > 0),
+    [repos, ctx],
+  );
+
   const results = useMemo(() => {
     const hasQuery = query.trim().length > 0;
     const hasFilters = filters.size > 0;
     if (!hasQuery && !hasFilters) return [];
 
     return repos.filter((repo) => {
-      const queryMatch = hasQuery ? matches(repo, query.trim()) : true;
+      const queryMatch = hasQuery ? matches(repo, query.trim(), ctx) : true;
       const filterMatch = hasFilters
-        ? [...filters].some(
-            (f) =>
-              repo.language?.toLowerCase() === f ||
-              repo.topics.some((t) => t.toLowerCase() === f),
-          )
+        ? [...filters].some((f) => matchesFilter(repo, f, ctx))
         : true;
       return queryMatch && filterMatch;
     });
-  }, [repos, query, filters]);
+  }, [repos, query, filters, ctx]);
 
-  return { results, allFilters };
+  return { results, allFilters, facetFilters };
 }

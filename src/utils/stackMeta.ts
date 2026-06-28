@@ -29,6 +29,8 @@ const meta: Record<string, StackMeta> = {
     label: "macOS",
   },
   cli: { color: "var(--overlay-a100-3)", bg: "var(--surface-2)", label: "CLI" },
+  npm: { color: "var(--border-a100)", bg: "var(--c-e00000)", label: "NPM" },
+  website: { color: "var(--border-a100)", bg: "var(--accent)", label: "Website" },
 };
 
 const FALLBACK: StackMeta = {

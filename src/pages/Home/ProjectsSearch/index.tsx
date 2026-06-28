@@ -20,6 +20,7 @@ export const ProjectSection = () => {
     inputRef,
     isLoading,
     allFilters,
+    facetFilters,
     displayResults,
     hasActiveFilters,
     hasInput,
@@ -99,7 +100,7 @@ export const ProjectSection = () => {
 
           {/* Filter row */}
           <AnimatePresence>
-            {!isLoading && allFilters.length > 0 && (
+            {!isLoading && (allFilters.length > 0 || facetFilters.length > 0) && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -108,7 +109,7 @@ export const ProjectSection = () => {
                 className="overflow-hidden"
               >
                 <FilterRow
-                  items={allFilters}
+                  items={[...facetFilters, ...allFilters]}
                   filters={filters}
                   onToggle={toggleFilter}
                   hasActiveFilters={hasActiveFilters}

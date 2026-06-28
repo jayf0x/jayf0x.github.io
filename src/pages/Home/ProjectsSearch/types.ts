@@ -1,4 +1,4 @@
-export type SortKey = "created_at" | "pushed_at" | "name" | "npm";
+export type SortKey = "created_at" | "pushed_at" | "name";
 
 /** Finds the npm URL for a repo, matching by base package name regardless of scope. */
 export function findNpmUrl(
