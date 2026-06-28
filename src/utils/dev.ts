@@ -1,5 +1,5 @@
 export const isDev = () => {
-  if (import.meta.env.DEV || !import.meta.env.PROD) {
+  if (import.meta.env.MODE === "aaarch") {
     return true;
   }
   return false;
