@@ -10,9 +10,11 @@ const iconCls =
 export const RepoLinks = ({
   repo,
   npmUrl,
+  hasPreview,
 }: {
   repo: GithubRepo;
   npmUrl?: string;
+  hasPreview?: boolean;
 }) => {
   const queryDMG = useQuery<string | null>({
     queryKey: ["repo-dmg", repo.name],
@@ -23,8 +25,13 @@ export const RepoLinks = ({
 
   return (
     <div className="flex flex-col items-end justify-between self-stretch shrink-0">
-      {/* Action icons */}
-      <div className="flex items-center gap-1">
+      {/* Action icons — over a preview image they sit on a blurred dark pill so
+          they stay legible even against a bright/white screenshot. */}
+      <div
+        className={`flex items-center gap-1 rounded-lg ${
+          hasPreview ? "bg-black/25 p-1 backdrop-blur-sm" : ""
+        }`}
+      >
         {npmUrl && (
           <a
             href={npmUrl}
