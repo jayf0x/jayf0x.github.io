@@ -4,10 +4,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import { router } from "./router";
-import "./styles/index.css";
+import { IS_DEV } from "./utils/dev";
 import { hydrateCache, queryClient } from "./utils/queryClient";
 
-if (import.meta.env.DEV) {
+import "./styles/index.css";
+
+if (IS_DEV) {
   const { scan } = await import("react-scan");
   scan({ enabled: true });
 }

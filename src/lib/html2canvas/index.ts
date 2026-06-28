@@ -1,34 +1,34 @@
+import { devLog } from "@/utils/dev";
 import {
+  AmbientLight,
+  Box3,
   CanvasTexture,
+  DirectionalLight,
   LinearFilter,
   Material,
   Matrix4,
   Mesh,
-  Texture,
-  Vector3,
-  WebGLRenderer,
-  WebGLProgramParametersWithUniforms,
-  VSMShadowMap,
+  MeshStandardMaterial,
+  PerspectiveCamera,
   SRGBColorSpace,
   Scene,
-  PerspectiveCamera,
-  AmbientLight,
-  DirectionalLight,
-  MeshStandardMaterial,
-  Box3,
+  Texture,
+  VSMShadowMap,
+  Vector3,
+  WebGLProgramParametersWithUniforms,
+  WebGLRenderer,
 } from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import {
   GLTFLoader,
   type GLTF,
 } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
   CreateProjectionSceneOptions,
   GLTFResult,
   ProjectionScene,
 } from "./types";
-import { devLog } from "@/utils/logger";
 
 async function blobToDataUri(blob: Blob): Promise<string> {
   return new Promise((res, rej) => {

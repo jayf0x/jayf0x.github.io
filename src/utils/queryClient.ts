@@ -1,4 +1,4 @@
-import { devLog } from "@/utils/logger";
+import { devLog } from "@/utils/dev";
 import { QueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
