@@ -5,6 +5,7 @@
   "homepage": "https://jayf0x.github.io/",
   "scripts": {
     "dev": "vite",
+    "dev:prod": "vite --mode production",
     "dd": "rm -rf ./node_modules/.vite && vite",
     "build": "vite build --mode production",
     "preview": "vite preview",

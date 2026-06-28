@@ -1,7 +1,12 @@
-export const IS_DEV = import.meta.env.DEV;
+export const isDev = () => {
+  if (import.meta.env.DEV || !import.meta.env.PROD) {
+    return true;
+  }
+  return false;
+};
 
 export const devLog = (...args: any) => {
-  if (IS_DEV) {
+  if (isDev()) {
     console.warn(...args);
   }
 };
