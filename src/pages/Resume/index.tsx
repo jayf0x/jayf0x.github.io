@@ -3,6 +3,7 @@ import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { useDigitalHeartbeat } from "@/lib/circuit";
 import { useRef } from "react";
 import { CircuitInfo } from "./CircuitInfo";
+import { CycleCounter } from "./CycleCounter";
 import { DownloadButton } from "./DownloadButton";
 import { Quote } from "./Quote";
 import { useCircuitPhase } from "./useCircuitPhase";
@@ -32,12 +33,16 @@ export const Resume = () => {
         >
           <DownloadButton ref={buttonRef} isMobile={isMobile} />
 
-          <p className="pointer-events-none font-mono text-[10px] uppercase tracking-[0.22em] text-white/55 whitespace-nowrap select-none translate-y-4 text-center">
+          <p className="pointer-events-none font-mono text-[10px] uppercase tracking-[0.22em] text-white/55 whitespace-nowrap select-none translate-y-6 text-center">
             download cv
           </p>
-          <p className="pointer-events-none font-mono text-[10px] tabular-nums tracking-[0.22em] text-white/30 whitespace-nowrap select-none translate-y-4 text-center">
-            ↻ {String(cycles).padStart(4, "0")}
-          </p>
+        </div>
+
+        <div
+          className={`absolute pointer-events-auto z-10 left-1/2 ${isMobile ? "bottom-1/5" : "bottom-1/5"}`}
+          style={{ transform: "translate(-50%, -50%)" }}
+        >
+          <CycleCounter count={cycles} />
         </div>
 
         <Quote active={active} />
