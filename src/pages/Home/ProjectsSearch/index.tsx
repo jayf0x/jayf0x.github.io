@@ -30,14 +30,11 @@ export const ProjectSection = () => {
   } = useProjectSearch();
 
   return (
-    <section className="flex flex-col min-h-[82vh] px-5 py-4 border-t border-border/30">
-      <h2 className="mx-auto max-w-5xl w-full mb-3 font-mono text-nano uppercase tracking-widest text-(--muted)">
-        Browse all projects
-      </h2>
-      <div className="mx-auto max-w-5xl flex flex-row gap-0 w-full items-start">
+    <section className="flex flex-col px-8 pt-6 pb-4">
+      <div className="mx-auto max-w-6xl flex flex-row gap-6 w-full items-start">
         <Sidebar onSelect={setQuery} onSort={applySort} />
 
-        <div className="flex-1 min-w-0 flex flex-col gap-3 md:pl-4">
+        <div className="flex-1 min-w-0 flex flex-col gap-3">
           {/* Search bar — sticks to top while browsing so it's always reachable */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -46,16 +43,16 @@ export const ProjectSection = () => {
             className="relative sticky top-0 z-20 py-2 bg-(--surface)/75 backdrop-blur-md"
           >
             <Search
-              size={14}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-(--muted)"
+              size={15}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--muted)"
             />
             <input
               ref={inputRef}
               type="text"
-              placeholder="Search projects…"
+              placeholder="Search projects, languages, topics…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-lg border border-border/70 bg-(--surface) py-2.5 pl-9 pr-24 text-sm text-text placeholder:text-(--overlay-a100) outline-none transition-all duration-150 focus:border-(--accent)/60 focus:shadow-[0_0_0_3px_rgba(79,124,255,0.08)]"
+              className="w-full rounded-full border border-border/70 bg-(--bg)/50 py-3 pl-11 pr-24 text-sm text-text placeholder:text-(--muted) outline-none transition-all duration-150 focus:border-(--accent)/60 focus:shadow-[0_0_0_3px_var(--accent-glow)]"
             />
             <div className="absolute right-3 top-0 h-full flex items-center gap-2">
               <AnimatePresence mode="popLayout">

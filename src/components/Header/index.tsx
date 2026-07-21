@@ -14,18 +14,21 @@ export const Header = () => {
         <Title />
       </div>
 
-      <nav className="flex items-center justify-end gap-5">
+      <nav className="flex items-center justify-end gap-1">
         {routeDefs.map(({ path, label }) => {
           const isActive = path === pathname;
           return (
             <Link
               key={`page-${path}`}
               to={path}
-              className={`font-mono text-sm uppercase tracking-[0.06em] transition-colors duration-150 ${
-                isActive ? "text-accent" : "text-muted hover:text-text"
+              className={`relative rounded-full px-3 py-1.5 text-sm tracking-tight transition-colors duration-150 ${
+                isActive ? "text-text" : "text-(--muted) hover:text-text"
               }`}
             >
-              {label}
+              {isActive && (
+                <span className="absolute inset-0 rounded-full border border-border/70 bg-(--surface)/70" />
+              )}
+              <span className="relative">{label}</span>
             </Link>
           );
         })}

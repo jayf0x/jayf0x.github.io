@@ -13,9 +13,9 @@ export const DefaultLayout = ({ children }: { children: ReactNode }) => {
       className={`flex flex-col relative bg-(--bg-a20) pointer-events-auto isolate ${
         isMobile
           ? "w-full h-[120vh]"
-          : "w-[60%] m-auto h-[90vh] mt-[5vh] rounded-xl"
+          : "w-[76%] max-w-[1400px] m-auto h-[90vh] mt-[5vh] rounded-2xl border border-white/10 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)]"
       }`}
-      style={{ backdropFilter: "blur(10px) brightness(0.4)" }}
+      style={{ backdropFilter: "blur(14px) brightness(0.42) saturate(1.1)" }}
     >
       <Header />
       {children}
