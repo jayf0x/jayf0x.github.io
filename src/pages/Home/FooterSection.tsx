@@ -6,7 +6,7 @@ export const FooterSection = () => (
       Jonatan Verstraete
     </span>
     <span className="font-mono text-nano uppercase tracking-widest text-(--muted)">
-      Ghent · {year}
+      Gent · {year}
     </span>
   </footer>
 );

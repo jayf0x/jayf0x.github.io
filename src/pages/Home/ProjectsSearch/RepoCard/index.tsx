@@ -66,7 +66,11 @@ export const RepoCard = ({
           languages={repo.language ? [repo.language] : []}
           onTagClick={onTagClick}
         />
-        <RepoLinks repo={repo} npmUrl={npmUrl} hasPreview={Boolean(previewUrl)} />
+        <RepoLinks
+          repo={repo}
+          npmUrl={npmUrl}
+          hasPreview={Boolean(previewUrl)}
+        />
       </div>
     </article>
   );

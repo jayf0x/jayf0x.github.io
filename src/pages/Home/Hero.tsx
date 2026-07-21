@@ -22,7 +22,7 @@ export const Hero = () => {
         transition={{ duration: 0.6, ease }}
         className="mb-6 font-mono text-nano uppercase tracking-[0.35em] text-(--muted)"
       >
-        Jonatan Verstraete — Engineering, Ghent
+        Jonatan Verstraete — Engineering, Gent
       </motion.p>
 
       <h1 className="font-display font-semibold leading-[0.86] tracking-[-0.03em] text-text">
