@@ -1,3 +1,4 @@
+import { StackIcon } from "@/components/StackIcon";
 import { TagChip } from "@/components/TagChip";
 import { GithubRepo } from "@/utils/fetch-repository";
 import { Archive } from "lucide-react";
@@ -43,6 +44,7 @@ export const RepoInfo = ({
         <TagChip
           key={lang}
           name={lang}
+          icon={<StackIcon language={lang} className="text-[11px]" />}
           onClick={
             onTagClick ? () => onTagClick(lang.toLowerCase()) : undefined
           }

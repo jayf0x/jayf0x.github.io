@@ -1,8 +1,9 @@
 import { OWNER } from "@/config";
 import { fetchLatestDmgUrl, GithubRepo } from "@/utils/fetch-repository";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { Download, Github, GlobeIcon, LucidePackageCheck } from "lucide-react";
 import { PropsWithChildren } from "react";
+import { FiDownloadCloud, FiExternalLink } from "react-icons/fi";
+import { SiGithub, SiNpm } from "react-icons/si";
 
 const iconCls =
   "group/icon flex items-center justify-center w-7 h-7 rounded border border-border/50 bg-(--surface)/70 hover:border-(--accent)/40 hover:bg-(--accent)/5 transition-all duration-150";
@@ -41,7 +42,7 @@ export const RepoLinks = ({
             className={iconCls}
           >
             <span className="text-[#CB3837] group-hover/icon:text-(--accent) transition-colors duration-150">
-              <LucidePackageCheck size={14} />
+              <SiNpm size={14} />
             </span>
           </a>
         )}
@@ -50,7 +51,7 @@ export const RepoLinks = ({
           title="Download .dmg"
           colorCls="text-(--muted)/70 group-hover/icon:text-(--accent)"
         >
-          <Download size={14} />
+          <FiDownloadCloud size={14} />
         </AsyncIcon>
         {repo.homepage && (
           <a
@@ -61,7 +62,7 @@ export const RepoLinks = ({
             className={iconCls}
           >
             <span className="text-[#4A90D9] group-hover/icon:text-(--accent) transition-colors duration-150">
-              <GlobeIcon size={14} />
+              <FiExternalLink size={14} />
             </span>
           </a>
         )}
@@ -73,7 +74,7 @@ export const RepoLinks = ({
           className={iconCls}
         >
           <span className="text-(--muted)/70 group-hover/icon:text-(--accent) transition-colors duration-150">
-            <Github size={14} />
+            <SiGithub size={14} />
           </span>
         </a>
       </div>

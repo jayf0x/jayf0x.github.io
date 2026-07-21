@@ -1,18 +1,31 @@
 import { OWNER } from "@/config";
-import { fetchUserRepos, type GithubRepo } from "@/utils/fetch-repository";
+import {
+  fetchNpmPackages,
+  fetchUserRepos,
+  type GithubRepo,
+} from "@/utils/fetch-repository";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 
 const ease = [0.16, 1, 0.3, 1] as const;
+const MONTH = 30 * 24 * 60 * 60 * 1000;
 
 export const Hero = () => {
   const { data: repos = [] } = useQuery<GithubRepo[]>({
     queryKey: ["repos", OWNER],
     queryFn: () => fetchUserRepos(OWNER),
   });
+  const { data: npmPackages } = useQuery<Record<string, string>>({
+    queryKey: ["npm-packages", OWNER],
+    queryFn: () => fetchNpmPackages(OWNER),
+    staleTime: Infinity,
+  });
 
   const count = repos.length;
-  const langs = new Set(repos.map((r) => r.language).filter(Boolean)).size;
+  const npmCount = npmPackages ? Object.keys(npmPackages).length : 0;
+  const shipped = repos.filter(
+    (r) => Date.now() - new Date(r.pushed_at).getTime() < MONTH,
+  ).length;
 
   return (
     <section className="relative mx-auto w-full max-w-6xl px-8 pt-16 pb-10">
@@ -61,14 +74,16 @@ export const Hero = () => {
         className="mt-6 flex items-center gap-6 font-mono text-nano text-(--muted)"
       >
         <span className="tabular-nums">
-          <span className="text-text">{count || "—"}</span> projects
+          <span className="text-text">{count || "—"}</span> repositories
         </span>
         <span className="h-3 w-px bg-(--border)" />
         <span className="tabular-nums">
-          <span className="text-text">{langs || "—"}</span> languages
+          <span className="text-text">{npmCount || "—"}</span> npm packages
         </span>
         <span className="h-3 w-px bg-(--border)" />
-        <span>open source</span>
+        <span className="tabular-nums">
+          <span className="text-text">{shipped || "—"}</span> shipped this month
+        </span>
       </motion.div>
     </section>
   );

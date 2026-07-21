@@ -6,16 +6,12 @@ import {
   fetchUserRepos,
   type GithubRepo,
 } from "@/utils/fetch-repository";
-import { getStackMeta } from "@/utils/stackMeta";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import {
-  ArrowUpRight,
-  Download,
-  Github,
-  Globe,
-  Package,
-} from "lucide-react";
+import type { IconType } from "react-icons";
+import { FiDownloadCloud, FiExternalLink } from "react-icons/fi";
+import { SiGithub, SiNpm } from "react-icons/si";
+import { StackIcon } from "@/components/StackIcon";
 import { findNpmUrl } from "./ProjectsSearch/types";
 
 const COUNT = 8;
@@ -33,8 +29,7 @@ export const Showcase = () => {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-8 pb-16">
-      {/* Two-column gallery — square tiles stack down both sides. */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {isLoading
           ? Array.from({ length: COUNT }).map((_, i) => <TileSkeleton key={i} />)
           : picks.map((repo, i) => <Tile key={repo.id} repo={repo} index={i} />)}
@@ -62,98 +57,81 @@ const Tile = ({ repo, index }: { repo: GithubRepo; index: number }) => {
     gcTime: Infinity,
   }).data;
 
-  const raw = repo.language ? getStackMeta(repo.language).bg : "";
-  const tint = raw && raw !== "transparent" ? raw : "var(--accent)";
-
   return (
     <motion.article
       initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6, delay: (index % 2) * 0.08, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative isolate flex aspect-square flex-col justify-between overflow-hidden rounded-[calc(var(--r-card)+4px)] border border-border/70 p-6 transition-all duration-500 hover:-translate-y-1.5 hover:border-white/20 hover:shadow-[0_30px_80px_-24px_rgba(0,0,0,0.8)]"
-      style={{
-        background: `
-          radial-gradient(130% 120% at 100% 0%, color-mix(in oklab, ${tint} 30%, transparent) 0%, transparent 52%),
-          radial-gradient(120% 120% at 0% 100%, color-mix(in oklab, ${tint} 14%, transparent) 0%, transparent 60%),
-          linear-gradient(150deg, color-mix(in oklab, ${tint} 10%, var(--surface)) 0%, var(--surface) 55%)`,
-      }}
+      className="group relative isolate flex aspect-square flex-col justify-end overflow-hidden rounded-[calc(var(--r-card)+2px)] border border-white/12 bg-(--surface) shadow-[3px_3px_0_0_rgba(0,0,0,0.5),6px_6px_0_0_rgba(0,0,0,0.4),9px_9px_0_0_rgba(0,0,0,0.3),12px_12px_24px_-6px_rgba(0,0,0,0.6)]"
     >
-      {/* Screenshot as texture, top area, fading down */}
-      {previewUrl && (
+      {/* Covering, centered screenshot */}
+      {previewUrl ? (
         <img
           src={previewUrl}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 w-full object-cover opacity-20 mix-blend-luminosity transition-all duration-500 group-hover:opacity-35"
-          style={{
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, black 0%, transparent 100%)",
-          }}
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-65 transition-opacity duration-500 group-hover:opacity-80"
         />
-      )}
-      {/* fine grain / vignette for depth */}
-      <div className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
-
-      {/* top row: language + arrow */}
-      <div className="relative z-10 flex items-start justify-between">
-        {repo.language && (
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-(--bg)/30 px-3 py-1 font-mono text-nano text-(--overlay-a100) backdrop-blur-sm">
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ background: tint }}
-            />
-            {repo.language}
-          </span>
-        )}
-        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-(--bg)/30 text-(--muted) backdrop-blur-sm transition-all duration-300 group-hover:border-(--accent)/50 group-hover:text-(--accent)">
-          <ArrowUpRight
-            size={16}
-            className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+      ) : (
+        // no screenshot → big ghosted stack glyph so the tile still has presence
+        repo.language && (
+          <StackIcon
+            language={repo.language}
+            className="pointer-events-none absolute -bottom-6 -right-6 text-[13rem] text-white/[0.04]"
           />
-        </span>
-      </div>
+        )
+      )}
 
-      {/* bottom: name, description, links */}
-      <div className="relative z-10">
-        {/* stretched link — whole tile opens homepage or repo */}
+      {/* Pro scrim: black for legibility + a single breath of primary */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/25" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-60"
+        style={{
+          background: `radial-gradient(100% 90% at 82% 4%, color-mix(in oklab, var(--accent) 30%, transparent) 0%, transparent 52%)`,
+        }}
+      />
+      {/* top bevel highlight for the raised look */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/15" />
+
+      {/* language chip, top-left */}
+      {repo.language && (
+        <span className="absolute left-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 font-mono text-nano text-white/80 backdrop-blur-md">
+          <StackIcon language={repo.language} className="text-[13px]" />
+          {repo.language}
+        </span>
+      )}
+
+      {/* content */}
+      <div className="relative z-10 p-6">
         <a
           href={repo.homepage || repo.html_url}
           target="_blank"
           rel="noreferrer"
           className="after:absolute after:inset-0 after:z-0 after:content-['']"
         >
-          <h3 className="font-display text-2xl font-semibold leading-tight tracking-tight text-text md:text-3xl">
+          <h3 className="font-display text-2xl font-semibold leading-tight tracking-tight text-white md:text-3xl [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
             {repo.name}
           </h3>
         </a>
 
         {repo.description && (
-          <p className="mt-2.5 max-w-[92%] text-sm leading-relaxed text-(--overlay-a100) line-clamp-3">
+          <p className="mt-2 max-w-[92%] text-sm leading-relaxed text-white/70 line-clamp-2 [text-shadow:0_1px_8px_rgba(0,0,0,0.7)]">
             {repo.description}
           </p>
         )}
 
         <div className="mt-5 flex items-center gap-2">
           {npmUrl && (
-            <TileLink href={npmUrl} label="npm">
-              <Package size={15} />
-            </TileLink>
+            <TileLink href={npmUrl} label="npm" Icon={SiNpm} brand="#cb3837" />
           )}
           {repo.homepage && (
-            <TileLink href={repo.homepage} label="Website">
-              <Globe size={15} />
-            </TileLink>
+            <TileLink href={repo.homepage} label="Website" Icon={FiExternalLink} />
           )}
           {dmgUrl && (
-            <TileLink href={dmgUrl} label="Download">
-              <Download size={15} />
-            </TileLink>
+            <TileLink href={dmgUrl} label="Download" Icon={FiDownloadCloud} />
           )}
-          <TileLink href={repo.html_url} label="Source">
-            <Github size={15} />
-          </TileLink>
+          <TileLink href={repo.html_url} label="Source" Icon={SiGithub} />
         </div>
       </div>
     </motion.article>
@@ -163,11 +141,13 @@ const Tile = ({ repo, index }: { repo: GithubRepo; index: number }) => {
 const TileLink = ({
   href,
   label,
-  children,
+  Icon,
+  brand,
 }: {
   href: string;
   label: string;
-  children: React.ReactNode;
+  Icon: IconType;
+  brand?: string;
 }) => (
   <a
     href={href}
@@ -175,12 +155,16 @@ const TileLink = ({
     rel="noreferrer"
     aria-label={label}
     title={label}
-    className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-(--bg)/40 text-(--overlay-a100) backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-(--accent)/50 hover:bg-(--accent)/10 hover:text-(--accent)"
+    className="group/link relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-black/40 text-white/75 backdrop-blur-md transition-colors duration-150 hover:border-(--accent)/60 hover:bg-(--accent)/15 hover:text-white"
+    style={brand ? ({ ["--brand" as string]: brand } as React.CSSProperties) : undefined}
   >
-    {children}
+    <Icon
+      size={15}
+      className={brand ? "group-hover/link:text-[var(--brand)]" : undefined}
+    />
   </a>
 );
 
 const TileSkeleton = () => (
-  <div className="aspect-square animate-pulse rounded-[calc(var(--r-card)+4px)] border border-border/40 bg-(--surface)/50" />
+  <div className="aspect-square animate-pulse rounded-[calc(var(--r-card)+2px)] border border-white/10 bg-(--surface)/60" />
 );

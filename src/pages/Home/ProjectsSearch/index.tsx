@@ -141,11 +141,10 @@ export const ProjectSection = () => {
             {isLoading ? (
               <LoadingSkeleton />
             ) : (
-              <AnimatePresence mode="popLayout" initial={false}>
+              <AnimatePresence initial={false}>
                 {hasInput && displayResults.length === 0 && (
                   <motion.div
                     key="empty-no-results"
-                    layout
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
@@ -155,18 +154,14 @@ export const ProjectSection = () => {
                   </motion.div>
                 )}
 
-                {displayResults.map((repo, i) => (
+                {displayResults.map((repo) => (
                   <motion.div
                     key={`repo-card-${repo.id}`}
-                    layout
-                    initial={{ opacity: 0, y: 8, scale: 0.99 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{
-                      opacity: 0,
-                      scale: 0.98,
-                      transition: { duration: 0.1 },
-                    }}
-                    transition={{ ...spring, delay: i * 0.02 }}
+                    layout="position"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ opacity: { duration: 0.18 }, layout: spring }}
                   >
                     <RepoCard repo={repo} onTagClick={toggleFilter} />
                   </motion.div>
