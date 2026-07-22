@@ -50,10 +50,12 @@ const MAP: Record<string, IconType> = {
 export const StackIcon = ({
   language,
   className,
+  style,
 }: {
   language: string;
   className?: string;
+  style?: React.CSSProperties;
 }) => {
   const Icon = MAP[language.toLowerCase()] ?? TbBinary;
-  return <Icon className={className} aria-hidden />;
+  return <Icon className={className} style={style} aria-hidden />;
 };

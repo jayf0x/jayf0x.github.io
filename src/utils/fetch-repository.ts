@@ -62,6 +62,36 @@ export async function fetchPreviewUrl(
   }
 }
 
+// Real language breakdown (bytes per language) for the stack bar.
+export async function fetchLanguages(
+  owner: string,
+  repo: string,
+): Promise<Record<string, number>> {
+  try {
+    const { data } = await axios.get<Record<string, number>>(
+      `${GITHUB_API}/repos/${owner}/${repo}/languages`,
+      { headers: HEADERS },
+    );
+    return data;
+  } catch {
+    return {};
+  }
+}
+
+// Optional animated preview: assets/preview.gif, swapped in on hover where present.
+export async function fetchPreviewGifUrl(
+  owner: string,
+  repo: string,
+): Promise<string | null> {
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/preview.gif`;
+  try {
+    await axios.head(url);
+    return url;
+  } catch {
+    return null;
+  }
+}
+
 // Flagship picks = the repos Jonatan links in his profile README, in order.
 export async function fetchFlagshipSlugs(owner: string): Promise<string[]> {
   const url = `https://raw.githubusercontent.com/${owner}/${owner}/main/README.md`;
