@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@gradio/client": "^2.2.0",
-    "@jayf0x/fluidity-js": "^1.2.1",
+    "@jayf0x/fluidity-js": "^1.2.2",
     "@million/lint": "^1.0.14",
     "@tanstack/query-sync-storage-persister": "^5.101.4",
     "@tanstack/react-query": "^5.100.9",
@@ -38,6 +38,7 @@
     "react-type-animation": "^3.2.0",
     "react-xarrows": "^2.0.2",
     "three": "^0.184.0",
+    "weighted-grid": "^1.0.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -1,16 +1,8 @@
-import { OWNER } from "@/config";
+import { useNpmPackages, useRepos } from "@/hooks/useRepoQueries";
 import { useRepoSearch } from "@/hooks/useRepoSearch";
-import {
-  fetchNpmPackages,
-  fetchUserRepos,
-  type GithubRepo,
-} from "@/utils/fetch-repository";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type SortKey } from "../types";
-
-const EMPTY_PKGS: Record<string, string> = {};
 
 // tag param is a comma-separated list so multiple active filters round-trip.
 const parseTags = (tag?: string): Set<string> =>
@@ -36,17 +28,8 @@ export function useProjectSearch() {
   const [sort, setSort] = useState<SortKey | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: repos = [], isLoading } = useQuery<GithubRepo[]>({
-    queryKey: ["repos", OWNER],
-    queryFn: () => fetchUserRepos(OWNER),
-  });
-
-  const { data: npmPackages = EMPTY_PKGS } = useQuery<Record<string, string>>({
-    queryKey: ["npm-packages", OWNER],
-    queryFn: () => fetchNpmPackages(OWNER),
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
+  const { data: repos = [], isLoading } = useRepos();
+  const { data: npmPackages = {} } = useNpmPackages();
 
   const facetCtx = useMemo(() => ({ npmPackages }), [npmPackages]);
   const { results, allFilters, facetFilters } = useRepoSearch(

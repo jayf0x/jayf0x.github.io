@@ -1,5 +1,4 @@
-import type { GithubRepo } from "@/utils/fetch-repository";
-import { findNpmUrl } from "./types";
+import { findNpmUrl, type GithubRepo } from "@/utils/fetch-repository";
 
 // Facets are derived boolean properties of a repo (does it ship an npm package,
 // does it have a website, …). They live in the same filter set as language/topic

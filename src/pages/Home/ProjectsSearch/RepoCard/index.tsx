@@ -1,13 +1,7 @@
-import { OWNER } from "@/config";
-import {
-  fetchNpmPackages,
-  fetchPreviewUrl,
-  type GithubRepo,
-} from "@/utils/fetch-repository";
+import { useNpmUrl, useRepoPreview } from "@/hooks/useRepoQueries";
+import { type GithubRepo } from "@/utils/fetch-repository";
 import { getStackMeta } from "@/utils/stackMeta";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { findNpmUrl } from "../types";
 import { RepoInfo } from "./RepoInfo";
 import { RepoLinks } from "./RepoLinks";
 
@@ -18,18 +12,8 @@ export const RepoCard = ({
   repo: GithubRepo;
   onTagClick?: (name: string) => void;
 }) => {
-  const { data: previewUrl } = useQuery<string | null>({
-    queryKey: ["repo-preview", repo.name],
-    queryFn: () => fetchPreviewUrl(OWNER, repo.name),
-  });
-
-  const npmUrl = useQuery<Record<string, string>, Error, string | undefined>({
-    queryKey: ["npm-packages", OWNER],
-    queryFn: () => fetchNpmPackages(OWNER),
-    staleTime: Infinity,
-    gcTime: Infinity,
-    select: (pkgs) => findNpmUrl(pkgs, repo.name),
-  }).data;
+  const previewUrl = useRepoPreview(repo.name);
+  const npmUrl = useNpmUrl(repo.name);
 
   // On mobile there's no hover, so a tap toggles the dimmed/readable state.
   const [tapped, setTapped] = useState(false);

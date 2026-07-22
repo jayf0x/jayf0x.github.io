@@ -1,6 +1,6 @@
-import { OWNER } from "@/config";
-import { fetchLatestDmgUrl, GithubRepo } from "@/utils/fetch-repository";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { useRepoDmgQuery } from "@/hooks/useRepoQueries";
+import { GithubRepo } from "@/utils/fetch-repository";
+import { UseQueryResult } from "@tanstack/react-query";
 import { PropsWithChildren } from "react";
 import { FiDownloadCloud, FiExternalLink } from "react-icons/fi";
 import { SiGithub, SiNpm } from "react-icons/si";
@@ -17,12 +17,7 @@ export const RepoLinks = ({
   npmUrl?: string;
   hasPreview?: boolean;
 }) => {
-  const queryDMG = useQuery<string | null>({
-    queryKey: ["repo-dmg", repo.name],
-    queryFn: () => fetchLatestDmgUrl(OWNER, repo.name),
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
+  const queryDMG = useRepoDmgQuery(repo.name);
 
   return (
     <div className="flex flex-col items-end justify-between self-stretch shrink-0">
