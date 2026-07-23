@@ -14,21 +14,21 @@ import { tierForWeight } from "./seed";
 import { StackBar } from "./StackBar";
 
 const TITLE_CLASS = {
-  hero: "text-3xl md:text-4xl",
-  standard: "text-xl",
-  compact: "text-base",
+  hero: "text-4xl md:text-5xl",
+  standard: "text-2xl",
+  compact: "text-lg",
 };
 
 const DESC_CLAMP = {
-  hero: "line-clamp-3",
-  standard: "line-clamp-2",
-  compact: "line-clamp-1",
+  hero: "line-clamp-4",
+  standard: "line-clamp-3",
+  compact: "line-clamp-2",
 };
 
 const PADDING = {
-  hero: "p-6",
-  standard: "p-5",
-  compact: "p-4",
+  hero: "p-8 md:p-9",
+  standard: "p-6",
+  compact: "p-5",
 };
 
 export const Card = memo(
@@ -51,15 +51,15 @@ export const Card = memo(
 
     return (
       <motion.article
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 22 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-40px" }}
+        viewport={{ once: true, margin: "-60px" }}
         transition={{
-          duration: 0.55,
-          delay: Math.min(index, 7) * 0.045,
+          duration: 0.7,
+          delay: Math.min(index, 7) * 0.06,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="group relative isolate flex h-full w-full flex-col justify-end overflow-hidden rounded-[calc(var(--r-card)+2px)] border border-white/12 bg-(--surface) shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,3px_3px_0_-1px_rgba(0,0,0,0.5),10px_16px_30px_-14px_rgba(0,0,0,0.75)] transition-[transform,box-shadow] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:-translate-y-1.5 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.1)_inset,6px_7px_0_0_var(--accent),20px_28px_54px_-12px_var(--accent-a45)]"
+        className="group relative isolate flex h-full w-full flex-col justify-end overflow-hidden rounded-(--r-card) bg-(--surface) shadow-[0_12px_34px_-20px_rgba(0,0,0,0.75)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:-translate-y-1 hover:shadow-[0_26px_52px_-26px_rgba(0,0,0,0.85)]"
       >
         <CardMedia
           previewUrl={previewUrl}
@@ -68,25 +68,18 @@ export const Card = memo(
           eager={index === 0}
         />
 
-        {/* legibility scrim + one breath of accent */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/68 to-black/10" />
+        {/* legibility scrim, weighted toward the text foot of the card */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
+        {/* one quiet breath of accent from the top corner */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-45 transition-opacity duration-500 group-hover:opacity-75"
+          className="pointer-events-none absolute inset-0 opacity-40 transition-opacity duration-500 group-hover:opacity-70"
           style={{
             background:
-              "radial-gradient(110% 90% at 84% 2%, color-mix(in oklab, var(--accent) 34%, transparent) 0%, transparent 54%)",
+              "radial-gradient(120% 90% at 85% 0%, color-mix(in oklab, var(--accent) 30%, transparent) 0%, transparent 55%)",
           }}
         />
-        {/* faint grain for tactile depth, not a flat scrim */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay"
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.9) 0.6px, transparent 0.6px)",
-            backgroundSize: "3px 3px",
-          }}
-        />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/15" />
+        {/* animated accent snake — revealed only on hover */}
+        <span className="ip-snake opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
 
         <StackBar languages={languages} />
 
@@ -98,7 +91,7 @@ export const Card = memo(
             className="after:absolute after:inset-0 after:z-0 after:content-['']"
           >
             <h3
-              className={`font-display font-semibold leading-tight tracking-tight text-white [text-shadow:0_1px_12px_rgba(0,0,0,0.7)] ${TITLE_CLASS[tier]}`}
+              className={`font-display font-semibold leading-[1.05] tracking-tight text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.65)] ${TITLE_CLASS[tier]}`}
             >
               {repo.name}
             </h3>
@@ -106,7 +99,7 @@ export const Card = memo(
 
           {repo.description && (
             <p
-              className={`mt-2 max-w-[82%] text-sm leading-relaxed text-white/70 [text-shadow:0_1px_8px_rgba(0,0,0,0.7)] ${DESC_CLAMP[tier]}`}
+              className={`mt-3 max-w-[54ch] text-sm leading-relaxed text-white/72 [text-shadow:0_1px_10px_rgba(0,0,0,0.7)] ${DESC_CLAMP[tier]}`}
             >
               {repo.description}
             </p>
@@ -117,7 +110,6 @@ export const Card = memo(
             homepage={repo.homepage}
             dmgUrl={dmgUrl}
             htmlUrl={repo.html_url}
-            tier={tier}
           />
         </div>
       </motion.article>

@@ -13,10 +13,11 @@ const mulberry32 = (seed: number) => {
   };
 };
 
-// Weighted pool, skewed toward small/medium tiles with occasional standouts —
-// an all-equal grid reads as a spreadsheet, not a showcase.
-const WEIGHT_POOL = [1, 1, 1, 2, 2, 3] as const;
-export const FEATURE_WEIGHT = 4;
+// Widened, uneven pool — the extra 4 lets a non-newest repo occasionally
+// bloom into a second big tile, so the grid never reads as one hero + a wall
+// of uniform small cards.
+const WEIGHT_POOL = [1, 1, 2, 2, 3, 3, 4] as const;
+export const FEATURE_WEIGHT = 6;
 
 export type SizeTier = "hero" | "standard" | "compact";
 
@@ -28,9 +29,21 @@ export const weightFor = (repo: GithubRepo, index: number): number =>
     ? FEATURE_WEIGHT
     : WEIGHT_POOL[Math.floor(mulberry32(repo.id)() * WEIGHT_POOL.length)];
 
+// Threshold at 4 (not 6) so a seeded standout reads as a proper hero tile —
+// big media, room for three lines of description — not just a large standard.
 export const tierForWeight = (weight: number): SizeTier =>
-  weight >= FEATURE_WEIGHT ? "hero" : weight >= 2 ? "standard" : "compact";
+  weight >= 4 ? "hero" : weight >= 2 ? "standard" : "compact";
 
 // Fixed skeleton sizes so the loading grid already hints at the mosaic
 // rhythm instead of a uniform wall of placeholders.
-export const SKELETON_WEIGHTS = [4, 1, 2, 1, 3, 1, 2, 1, 1, 2] as const;
+export const SKELETON_WEIGHTS = [6, 2, 3, 1, 4, 2, 3, 1, 2, 3] as const;
+
+// Void tiles are woven in at these card-sequence positions (desktop only) to
+// carve breathing room into the mosaic — negative space is a design element,
+// not wasted area. Positions are golden-ish, not evenly spaced, so the gaps
+// feel placed rather than looped.
+export const VOID_AFTER: ReadonlyArray<{ after: number; weight: number }> = [
+  { after: 2, weight: 2 },
+  { after: 6, weight: 1 },
+  { after: 9, weight: 2 },
+];

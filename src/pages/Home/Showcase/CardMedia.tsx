@@ -29,21 +29,23 @@ export const CardMedia = memo(
 
     return (
       <>
+        {/* atmosphere fill: blurred cover copy, clearly present behind */}
         <img
           src={previewUrl}
           alt=""
           aria-hidden
           loading={eager ? "eager" : "lazy"}
           decoding="async"
-          className="pointer-events-none absolute inset-0 h-full w-full scale-105 object-cover opacity-40 blur-[3px] grayscale brightness-75 transition-[opacity,filter] duration-500 group-hover:opacity-55 group-hover:grayscale-[0.4]"
+          className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-[2px] grayscale brightness-[0.8] transition-[opacity,filter,transform] duration-700 group-hover:scale-[1.14] group-hover:opacity-70 group-hover:grayscale-[0.35]"
         />
+        {/* sharp contained copy, edges feathered so it melts into the fill */}
         <img
           src={previewUrl}
           alt=""
           aria-hidden
           loading={eager ? "eager" : "lazy"}
           decoding="async"
-          className="img-contain-mask pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-85 transition-[opacity,transform] duration-500 group-hover:scale-[1.03] group-hover:opacity-100"
+          className="img-contain-mask pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-95 transition-[opacity,transform] duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
         />
         {gifUrl && (
           <img
