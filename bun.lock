@@ -25,7 +25,7 @@
         "react-type-animation": "^3.2.0",
         "react-xarrows": "^2.0.2",
         "three": "^0.184.0",
-        "weighted-grid": "^1.0.3",
+        "weighted-grid": "^1.1.0",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -1219,7 +1219,7 @@
 
     "webpack-virtual-modules": ["webpack-virtual-modules@0.6.2", "", {}, "sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ=="],
 
-    "weighted-grid": ["weighted-grid@1.0.3", "", { "peerDependencies": { "react": ">=18" }, "optionalPeers": ["react"] }, "sha512-dp3Alq8Q5uHR7A4ty4Qv6kkMRqePTGdyNamSkuFbCZnE0KD1o0vM1jTFcAAULy4Pv1YCxL8zZ/ZcSbVt3c5HGg=="],
+    "weighted-grid": ["weighted-grid@1.1.0", "", { "peerDependencies": { "react": ">=18" }, "optionalPeers": ["react"] }, "sha512-YsqoBT5jqA7q0lPPnW0FZHp7RTjtsEuZ+ndZ+dvB9dVtlGsO+8KqUZ+FmwzNuIovF7FNOVGKAssSl4X04ZPCoQ=="],
 
     "whatwg-fetch": ["whatwg-fetch@3.6.20", "", {}, "sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg=="],
 

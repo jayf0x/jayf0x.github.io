@@ -42,7 +42,7 @@ export const Showcase = () => {
       <Grid
         cols={cols}
         rows={rows}
-        fill={false}
+        isFillHeight={false}
         rowHeight={rowHeight}
         gap={gap}
       >
