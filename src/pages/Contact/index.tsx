@@ -1,11 +1,39 @@
 import { InfoPopover } from "@/components/InfoPopover";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import type { ConwayControls } from "@/lib/conway/conway";
-import { createConwayEngine } from "@/lib/conway/conway";
+import {
+  attachDrawInteraction,
+  createLife,
+  DAY_NIGHT,
+  type LifeControls,
+} from "conways-life";
 import { Github, Linkedin, Package, Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type SimMode = "conway" | "daynight";
+
+const COLORS_CONWAY = [
+  "var(--c-0f1950)",
+  "var(--c-193282)",
+  "var(--c-2d5fb9)",
+  "var(--c-55afff)",
+  "var(--c-4196eb)",
+  "var(--c-3073c8)",
+  "var(--c-2250a5)",
+  "var(--c-163a8c)",
+  "var(--c-0e266e)",
+];
+
+const COLORS_DAYNIGHT = [
+  "var(--text)",
+  "var(--c-ffd796)",
+  "var(--c-ffb446)",
+  "var(--amber)",
+  "var(--c-da5a08)",
+  "var(--c-b93704)",
+  "var(--c-961c02)",
+  "var(--c-730a01)",
+  "var(--c-4e0301)",
+];
 
 const links = [
   {
@@ -47,19 +75,21 @@ const links = [
 
 export const Contact = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<ConwayControls | null>(null);
+  const engineRef = useRef<LifeControls | null>(null);
   const [simMode, setSimMode] = useState<SimMode>("conway");
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    const engine = createConwayEngine(
-      canvasRef.current,
-      simMode === "conway",
-      {},
-    );
+    const isConway = simMode === "conway";
+    const engine = createLife(canvasRef.current, {
+      rule: isConway ? undefined : DAY_NIGHT,
+      colors: isConway ? COLORS_CONWAY : COLORS_DAYNIGHT,
+    });
+    const detach = attachDrawInteraction(canvasRef.current, engine);
     engineRef.current = engine;
     return () => {
+      detach();
       engine.destroy();
       engineRef.current = null;
     };

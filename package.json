@@ -27,6 +27,7 @@
     "@tanstack/react-router": "^1.170.16",
     "@types/node": "^26.0.0",
     "axios": "^1.16.0",
+    "conways-life": "^1.0.4",
     "framer-motion": "^12.38.0",
     "jotai": "^2.20.0",
     "lucide-react": "0.487.0",
