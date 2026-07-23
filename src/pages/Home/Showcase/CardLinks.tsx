@@ -43,7 +43,7 @@ const LinkIcon = ({
     rel="noreferrer"
     aria-label={label}
     title={label}
-    className="relative z-10 flex items-center text-white/50 transition-[color,transform] duration-200 hover:-translate-y-px hover:text-(--accent)"
+    className="relative z-10 flex items-center text-white/50 transition-colors duration-200 ease-out hover:text-(--accent)"
   >
     <Icon size={16} />
   </a>

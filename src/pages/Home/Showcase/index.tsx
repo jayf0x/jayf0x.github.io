@@ -1,90 +1,87 @@
+import { useIsMobile } from "@/hooks/useDevice";
 import { useRepos } from "@/hooks/useRepoQueries";
 import type { GithubRepo } from "@/utils/fetch-repository";
 import { useMemo } from "react";
 import { Grid, GridItem } from "weighted-grid/react";
 import { Card } from "./Card";
 import { CardSkeleton } from "./CardSkeleton";
-import { SKELETON_WEIGHTS, VOID_AFTER, weightFor } from "./seed";
+import { Tile, TileEmpty } from "./typing";
 import { useGridCols } from "./useGridCols";
 import { VoidTile } from "./VoidTile";
 
-const COUNT = 12;
+const emptyTiles: TileEmpty[] = [
+  { index: 3, cols: 3, rows: 3 },
+  { index: 6, cols: 1, rows: 3 },
+  { index: 12, cols: 4, rows: 2 },
+];
+
+const weightByIndex = (index: number) => (index === 0 ? 3 : index % 2 || 2);
 
 const byNewest = (a: GithubRepo, b: GithubRepo) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
-type Tile =
-  | {
-      kind: "card";
-      key: string;
-      weight: number;
-      repo: GithubRepo;
-      index: number;
-    }
-  | { kind: "void"; key: string; weight: number };
-
 export const Showcase = () => {
   const { data: repos = [], isLoading } = useRepos();
   const cols = useGridCols();
-  const withVoids = cols > 2;
+  const isMobile = useIsMobile();
 
-  // Build the woven tile list once: repos (newest-first) get a stable seeded
-  // weight, and — on desktop — a few void tiles are threaded between them for
+  const COUNT = isMobile ? 5 : 12;
+
+  // Build the woven tile list once: repos (newest-first) get a stable weight,
+  // and — on desktop — a few blueprint tiles are threaded between them for
   // negative space. Weight is reused for the card's own typography tier.
   const tiles = useMemo<Tile[]>(() => {
-    const cards = repos
-      .slice()
-      .sort(byNewest)
-      .slice(0, COUNT)
-      .map((repo, index) => ({ repo, index, weight: weightFor(repo, index) }));
+    const recentRepos = repos.slice().sort(byNewest).slice(0, COUNT);
 
-    const out: Tile[] = [];
-    cards.forEach((c, i) => {
-      out.push({ kind: "card", key: String(c.repo.id), ...c });
-      if (withVoids) {
-        const v = VOID_AFTER.find((x) => x.after === i + 1);
-        if (v) out.push({ kind: "void", key: `void-${i}`, weight: v.weight });
-      }
+    const temp: Tile[] = [];
+
+    recentRepos.forEach((repo, index) => {
+      const w = weightByIndex(index);
+      temp.push({
+        repo,
+        weight: w + 4,
+        // cols: w + 4,
+        rows: w + 2,
+      });
     });
-    return out;
-  }, [repos, withVoids]);
 
-  const itemCount = isLoading ? SKELETON_WEIGHTS.length : tiles.length;
-  const rows = Math.max(1, Math.ceil(itemCount / cols));
-  const rowHeight = cols <= 2 ? 200 : 268;
-  const gap = cols <= 2 ? 14 : 22;
+    // emptyTiles.forEach((tile, idx) => {
+    //   if (tile.index < recentRepos.length) {
+    //     temp.splice(tile.index - idx, 1, tile);
+    //   }
+    // });
+
+    return temp.concat(...emptyTiles).sort((a, b) => {
+      const ia = a.index ?? temp.indexOf(a);
+      const ib = a.index ?? temp.indexOf(b);
+
+      return ib - ia;
+    });
+
+    return temp;
+  }, [repos, COUNT]);
 
   return (
-    <section className="mx-auto w-full max-w-[88rem] px-6 pb-24 md:px-10">
+    <section className="mx-auto w-full max-w-352 px-6 pb-24 md:px-10">
       <Grid
-        cols={cols}
-        rows={rows}
+        cols={isMobile ? 5 : 12}
+        rows={5}
         isFillHeight={false}
         isAnimated={false}
-        rowHeight={rowHeight}
-        gap={gap}
+        rowHeight={isMobile ? 50 : 80}
+        gap={5}
       >
         {isLoading
-          ? SKELETON_WEIGHTS.map((weight, i) => (
-              <GridItem key={i} weight={weight}>
+          ? [...Array(COUNT)].map((weight, i) => (
+              <GridItem key={i} weight={weightByIndex(weight)}>
                 <CardSkeleton />
               </GridItem>
             ))
-          : tiles.map((tile) =>
-              tile.kind === "void" ? (
-                <GridItem key={tile.key} weight={tile.weight}>
-                  <VoidTile />
-                </GridItem>
-              ) : (
-                <GridItem key={tile.key} weight={tile.weight}>
-                  <Card
-                    repo={tile.repo}
-                    index={tile.index}
-                    weight={tile.weight}
-                  />
-                </GridItem>
-              ),
-            )}
+          : tiles.map(({ repo, index, ...args }, idx) => (
+              <GridItem key={`tile-${repo ? repo.id : index}`} {...args}>
+                {repo ? <Card repo={repo} index={idx} /> : <VoidTile />}
+              </GridItem>
+            ))}
       </Grid>
     </section>
   );

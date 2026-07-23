@@ -10,23 +10,23 @@ import { motion } from "framer-motion";
 import { memo } from "react";
 import { CardLinks } from "./CardLinks";
 import { CardMedia } from "./CardMedia";
-import { tierForWeight } from "./seed";
+// import { tierForWeight } from "./seed";
 import { StackBar } from "./StackBar";
 
 const TITLE_CLASS = {
-  hero: "text-4xl md:text-5xl",
-  standard: "text-2xl",
+  hero: "text-2xl md:text-3xl",
+  standard: "text-xl",
   compact: "text-lg",
 };
 
 const DESC_CLAMP = {
-  hero: "line-clamp-4",
-  standard: "line-clamp-3",
+  hero: "line-clamp-3",
+  standard: "line-clamp-2",
   compact: "line-clamp-2",
 };
 
 const PADDING = {
-  hero: "p-8 md:p-9",
+  hero: "p-7",
   standard: "p-6",
   compact: "p-5",
 };
@@ -35,11 +35,11 @@ export const Card = memo(
   ({
     repo,
     index,
-    weight,
+    // weight,
   }: {
     repo: GithubRepo;
     index: number;
-    weight: number;
+    // weight: number;
   }) => {
     const previewUrl = useRepoPreview(repo.name);
     const gifUrl = useRepoGif(repo.name);
@@ -47,11 +47,13 @@ export const Card = memo(
     const npmUrl = useNpmUrl(repo.name);
     const dmgUrl = useRepoDmgUrl(repo.name);
 
-    const tier = tierForWeight(weight);
+    // const tier = tierForWeight(weight);
+
+    const tier = "standard";
 
     return (
       <motion.article
-        initial={{ opacity: 0, y: 22 }}
+        initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{
@@ -59,7 +61,7 @@ export const Card = memo(
           delay: Math.min(index, 7) * 0.06,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="group relative isolate flex h-full w-full flex-col justify-end overflow-hidden rounded-(--r-card) bg-(--surface) shadow-[0_12px_34px_-20px_rgba(0,0,0,0.75)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:-translate-y-1 hover:shadow-[0_26px_52px_-26px_rgba(0,0,0,0.85)]"
+        className="group relative isolate flex h-full w-full flex-col justify-end overflow-hidden rounded-[10px] bg-(--surface) shadow-[0_10px_30px_-22px_rgba(0,0,0,0.7)]"
       >
         <CardMedia
           previewUrl={previewUrl}
@@ -70,16 +72,19 @@ export const Card = memo(
 
         {/* legibility scrim, weighted toward the text foot of the card */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
-        {/* one quiet breath of accent from the top corner */}
+        {/* one quiet breath of accent from the top corner (opacity only) */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-40 transition-opacity duration-500 group-hover:opacity-70"
+          className="pointer-events-none absolute inset-0 opacity-35 transition-opacity duration-500 ease-out group-hover:opacity-60"
           style={{
             background:
-              "radial-gradient(120% 90% at 85% 0%, color-mix(in oklab, var(--accent) 30%, transparent) 0%, transparent 55%)",
+              "radial-gradient(120% 90% at 85% 0%, color-mix(in oklab, var(--accent) 26%, transparent) 0%, transparent 55%)",
           }}
         />
         {/* animated accent snake — revealed only on hover */}
-        <span className="ip-snake opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
+        <span
+          className="ip-snake opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
+          aria-hidden
+        />
 
         <StackBar languages={languages} />
 
@@ -91,7 +96,7 @@ export const Card = memo(
             className="after:absolute after:inset-0 after:z-0 after:content-['']"
           >
             <h3
-              className={`font-display font-semibold leading-[1.05] tracking-tight text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.65)] ${TITLE_CLASS[tier]}`}
+              className={`font-display font-semibold leading-[1.1] tracking-tight text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.6)] ${TITLE_CLASS[tier]}`}
             >
               {repo.name}
             </h3>
@@ -99,7 +104,7 @@ export const Card = memo(
 
           {repo.description && (
             <p
-              className={`mt-3 max-w-[54ch] text-sm leading-relaxed text-white/72 [text-shadow:0_1px_10px_rgba(0,0,0,0.7)] ${DESC_CLAMP[tier]}`}
+              className={`mt-2.5 max-w-[46ch] text-[0.8125rem] leading-relaxed text-white/70 [text-shadow:0_1px_10px_rgba(0,0,0,0.7)] ${DESC_CLAMP[tier]}`}
             >
               {repo.description}
             </p>

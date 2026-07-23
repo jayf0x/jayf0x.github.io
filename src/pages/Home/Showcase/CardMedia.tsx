@@ -1,9 +1,10 @@
 import { StackIcon } from "@/components/StackIcon";
 import { memo } from "react";
 
-// Image layer for a card: grayscale blurred cover fill for atmosphere, a
-// sharp contained copy on top for legibility, and an optional gif swap-in on
-// hover. Falls back to a giant ghost stack icon when there's no preview.
+// Image layer for a card: a blurred cover fill for atmosphere, a sharp cover
+// copy on top with feathered edges so its rectangle melts into the blur, and
+// an optional gif swap-in on hover. Falls back to a giant ghost stack icon
+// when there's no preview. No hover scaling — only opacity/filter eases.
 export const CardMedia = memo(
   ({
     previewUrl,
@@ -21,7 +22,7 @@ export const CardMedia = memo(
         language && (
           <StackIcon
             language={language}
-            className="pointer-events-none absolute -bottom-6 -right-6 text-[13rem] text-white/[0.04] transition-transform duration-500 group-hover:scale-110"
+            className="pointer-events-none absolute -bottom-6 -right-6 text-[13rem] text-white/[0.04]"
           />
         )
       );
@@ -29,23 +30,24 @@ export const CardMedia = memo(
 
     return (
       <>
-        {/* atmosphere fill: blurred cover copy, clearly present behind */}
+        {/* atmosphere fill: blurred cover copy, present in the feathered margins */}
         <img
           src={previewUrl}
           alt=""
           aria-hidden
           loading={eager ? "eager" : "lazy"}
           decoding="async"
-          className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-[2px] grayscale brightness-[0.8] transition-[opacity,filter,transform] duration-700 group-hover:scale-[1.14] group-hover:opacity-70 group-hover:grayscale-[0.35]"
+          className="pointer-events-none absolute inset-0 h-full w-full scale-105 object-cover opacity-55 blur-[2px] grayscale brightness-[0.8]"
         />
-        {/* sharp contained copy, edges feathered so it melts into the fill */}
+        {/* sharp cover copy — object-cover fills edge-to-edge so the feather
+            mask actually softens the picture's edges on any aspect ratio */}
         <img
           src={previewUrl}
           alt=""
           aria-hidden
           loading={eager ? "eager" : "lazy"}
           decoding="async"
-          className="img-contain-mask pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-95 transition-[opacity,transform] duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
+          className="img-contain-mask pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-95 transition-opacity duration-500 ease-out group-hover:opacity-100"
         />
         {gifUrl && (
           <img
@@ -54,7 +56,7 @@ export const CardMedia = memo(
             aria-hidden
             loading="lazy"
             decoding="async"
-            className="img-contain-mask pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            className="img-contain-mask pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
           />
         )}
       </>

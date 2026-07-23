@@ -1,3 +1,3 @@
 export const CardSkeleton = () => (
-  <div className="h-full w-full animate-pulse rounded-(--r-card) bg-(--surface)/70" />
+  <div className="h-full w-full animate-pulse rounded-[10px] bg-(--surface)/70" />
 );

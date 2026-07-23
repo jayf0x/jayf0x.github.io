@@ -1,16 +1,14 @@
-// Intentional negative space in the mosaic. Not empty — a faint centered
-// crosshair + grain reads as placed whitespace, a quiet beat between cards.
+// Blueprint negative space — a faint diagonal hatch with hairline side rules.
+// Reads as an intentional draft/placeholder beat between cards, not an empty
+// hole. Pattern lifted from Tailwind's own docs treatment.
 export const VoidTile = () => (
-  <div className="group/void relative h-full w-full overflow-hidden rounded-(--r-card)">
-    <div
-      className="pointer-events-none absolute inset-0 opacity-[0.04]"
-      style={{
-        backgroundImage:
-          "radial-gradient(rgba(255,255,255,0.9) 0.6px, transparent 0.6px)",
-        backgroundSize: "14px 14px",
-      }}
-    />
-    <span className="absolute left-1/2 top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-white/[0.06]" />
-    <span className="absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-white/[0.06]" />
-  </div>
+  <div
+    className="h-full w-full rounded-[10px] border-x border-x-(--pattern-fg) bg-[image:repeating-linear-gradient(315deg,var(--pattern-fg)_0,var(--pattern-fg)_1px,transparent_0,transparent_50%)] bg-[length:10px_10px]"
+    style={
+      {
+        "--pattern-fg": "color-mix(in oklab, #ffffff 8%, transparent)",
+      } as React.CSSProperties
+    }
+    aria-hidden
+  />
 );
